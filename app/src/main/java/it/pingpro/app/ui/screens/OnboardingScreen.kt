@@ -76,7 +76,7 @@ fun OnboardingScreen(onDone: () -> Unit, onTour: (() -> Unit)? = null) {
     val pager = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
     Column(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0D1830), Palette.Bg, Palette.Bg))).statusBarsPadding().navigationBarsPadding()
+        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Palette.AccentBg, Palette.Bg, Palette.Bg))).statusBarsPadding().navigationBarsPadding()
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.End) {
             TextButton(onClick = onDone) { Text("Salta", color = Palette.TextDim) }
@@ -100,12 +100,12 @@ fun OnboardingScreen(onDone: () -> Unit, onTour: (() -> Unit)? = null) {
         }
         val last = pager.currentPage == pages.lastIndex
         Box(
-            Modifier.padding(horizontal = 24.dp).padding(bottom = 20.dp).fillMaxWidth().height(60.dp).clip(RoundedCornerShape(22.dp))
-                .background(Brush.horizontalGradient(listOf(Color(0xFF3D8BFF), Color(0xFF2F6BFF))))
+            Modifier.padding(horizontal = 24.dp).padding(bottom = 20.dp).fillMaxWidth().height(60.dp).clip(RoundedCornerShape(30.dp))
+                .background(Palette.Accent)
                 .clickable { if (last) onDone() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
             contentAlignment = Alignment.Center,
         ) {
-            Text(if (last) "INIZIA" else "AVANTI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp, letterSpacing = 1.2.sp)
+            Text(if (last) "Inizia" else "Avanti", color = Color.White, style = MaterialTheme.typography.labelLarge, fontSize = 17.sp)
         }
         if (last && onTour != null) {
             TextButton(onClick = onTour, modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp)) {

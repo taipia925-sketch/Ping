@@ -116,19 +116,19 @@ fun GuideScreen(
         item {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF5A1B2B), Color(0xFF2A0F17))))
-                    .border(1.dp, Palette.Red.copy(alpha = 0.3f), RoundedCornerShape(26.dp))
+                    .background(Palette.DangerBg)
+                    .border(1.dp, Palette.Red.copy(alpha = 0.25f), RoundedCornerShape(26.dp))
                     .clickable(onClick = onOpenDiagnosis).padding(20.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("La scheda non risponde?", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                        Text("La scheda non risponde?", style = MaterialTheme.typography.titleLarge, color = Palette.OnDangerBg)
                         Spacer(Modifier.height(4.dp))
                         Text("Diagnosi guidata passo passo, con test reali: ti dice dove cercare il problema.",
-                            style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
+                            style = MaterialTheme.typography.bodyMedium, color = Palette.OnDangerBg.copy(alpha = 0.85f))
                     }
                     Spacer(Modifier.width(12.dp))
-                    Icon(Icons.Outlined.TravelExplore, null, tint = Color.White, modifier = Modifier.size(40.dp))
+                    Icon(Icons.Outlined.TravelExplore, null, tint = Palette.Red, modifier = Modifier.size(40.dp))
                 }
             }
         }
@@ -212,9 +212,9 @@ fun GuideScreen(
                 Step(1, "Collega il telefono alla rete della scheda", "Impostazioni › Connessioni › Wi-Fi, e scegli la rete a cui è collegata la scheda. Va bene anche se quella rete non ha Internet: l'app invia comunque i test sulla rete giusta.")
                 Step(2, "Scegli l'indirizzo", "Tocca «Gateway …» per usare il gateway predefinito senza scriverlo, scegli una scheda salvata, oppure scrivi l'IP (es. 192.168.1.100).")
                 Step(3, "Scegli la modalità", "Singolo: 4 richieste e stop, come «ping 192.168.1.100». Continuo: va avanti finché non premi Interrompi, come «ping -t 192.168.1.100».")
-                Step(4, "Premi AVVIA TEST", "Parte circa una richiesta al secondo. Lo stato diventa verde se la scheda risponde, giallo se ci sono rallentamenti o perdite, rosso se non risponde.")
+                Step(4, "Premi «Avvia test»", "Parte circa una richiesta al secondo. Lo stato diventa verde se la scheda risponde, giallo se ci sono rallentamenti o perdite, rosso se non risponde.")
                 Step(5, "Leggi il risultato", "Guarda Perdita e Latenza media. 0% persi e pochi millisecondi: la comunicazione funziona.")
-                Step(6, "Interrompi, salva, condividi", "Premi INTERROMPI quando vuoi. Il test è salvato nello Storico: puoi copiarlo, esportarlo, ripeterlo o confrontarlo.")
+                Step(6, "Interrompi, salva, condividi", "Premi «Interrompi test» quando vuoi. Il test è salvato nello Storico: puoi copiarlo, esportarlo, ripeterlo o confrontarlo.")
                 Spacer(Modifier.height(4.dp))
                 Text("Prova ora →", style = MaterialTheme.typography.labelLarge, color = Palette.AccentSoft,
                     modifier = Modifier.clip(CircleShape).clickable(onClick = onTryNow).padding(horizontal = 12.dp, vertical = 8.dp))
@@ -222,12 +222,12 @@ fun GuideScreen(
         }
         item {
             GuideSection(Icons.Outlined.Widgets, "Tutte le funzioni", Palette.Amber) {
-                Para("Test", "Indirizzo, modalità, AVVIA/INTERROMPI e, durante il test: stato, latenza, statistiche, grafico, mappa pacchetti, elenco risposte e cronologia eventi. Il «Tour dell'app» li mostra uno per uno.")
+                Para("Test", "Indirizzo, modalità, Avvia/Interrompi e, durante il test: stato, latenza, statistiche, grafico, mappa pacchetti, elenco risposte e cronologia eventi. Il «Tour dell'app» li mostra uno per uno.")
                 Para("Stato colorato", "Verde: risponde. Giallo «Lenta»: l'ultima risposta supera la soglia (100 ms, modificabile). Giallo «Instabile»: almeno un pacchetto perso negli ultimi 10. Rosso «Non risponde»: 2 o più richieste di fila senza risposta; il telefono vibra (e suona, se attivato).")
                 Para("Grafico", "Linea della latenza, linea tratteggiata della media, barre rosse per i pacchetti persi e zone rosse per le interruzioni. Puoi vedere gli ultimi 60 pacchetti o tutto il test.")
                 Para("Mappa pacchetti", "Gli ultimi 40 pacchetti come quadratini colorati: verde/azzurro risposte veloci, giallo/arancio lente, rosso perse.")
                 Para("Più schede insieme", "In alto nella schermata Test scegli «Più schede». Componi l'elenco con le schede salvate, con un intervallo (es. da 192.168.1.100 a 192.168.1.120) o incollando gli indirizzi, e salvalo come gruppo con il nome dell'apparato. Ogni scheda ha il proprio ping indipendente, come più finestre del Prompt aperte insieme. I contatori in alto dicono quante rispondono, quante sono instabili e quante non rispondono; le schede con problemi compaiono per prime. Tocca una scheda per i dettagli. Nello Storico il test appare come un unico blocco che si apre sulle singole schede.")
-                Para("Rete (ipconfig)", "Configurazione IP del telefono con gateway in evidenza e pulsante PING GATEWAY. La «Vista Prompt» la mostra come nella finestra di Windows e permette di copiarla.")
+                Para("Rete (ipconfig)", "Configurazione IP del telefono con gateway in evidenza e pulsante «Ping gateway». La «Vista Prompt» la mostra come nella finestra di Windows e permette di copiarla.")
                 Para("Schede", "Indirizzi salvati con un nome (es. «Quadro linea 3») e note. Il test parte con un tocco e vedi l'esito dell'ultimo controllo.")
                 Para("Storico e confronto", "Ogni test è salvato automaticamente. Tocca un test per i dettagli; tieni premuto (o usa ⇄) per sceglierne due e confrontarli.")
                 Para("Esporta e copia", "«Copia» mette negli appunti un report nello stesso formato del Prompt di Windows. «Testo» e «CSV» lo inviano via e-mail, chat o Drive; il CSV si apre con Excel.")
@@ -282,7 +282,7 @@ private fun SectionLabel(text: String) {
 private fun ToolCard(icon: ImageVector, title: String, text: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
     Column(
         modifier.height(150.dp).clip(RoundedCornerShape(24.dp)).background(Palette.Surface)
-            .border(1.dp, color.copy(alpha = 0.25f), RoundedCornerShape(24.dp)).clickable(onClick = onClick).padding(16.dp)
+            .clickable(onClick = onClick).padding(16.dp)
     ) {
         IconBadge(icon, color, size = 42.dp)
         Spacer(Modifier.weight(1f))

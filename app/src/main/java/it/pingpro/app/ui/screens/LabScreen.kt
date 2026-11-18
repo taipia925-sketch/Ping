@@ -165,7 +165,7 @@ fun LabContent(
                 items(LabScenario.entries) { sc ->
                     val sel = sc == scenario
                     Text(sc.label, style = MaterialTheme.typography.labelLarge, color = if (sel) Color.White else Palette.TextDim,
-                        modifier = Modifier.clip(CircleShape).background(if (sel) Palette.Accent else Palette.Surface2)
+                        modifier = Modifier.clip(CircleShape).background(if (sel) Palette.Accent else Palette.Surface)
                             .clickable { onScenario(sc) }.padding(horizontal = 16.dp, vertical = 10.dp))
                 }
             }
@@ -186,7 +186,6 @@ fun LabContent(
         item { StatusHero(state, settings) }
         item { StatsGrid(state, settings) }
         item { ChartCard(state) }
-        item { StripCard(state, settings) }
         item { EventsCard(state.events) }
         item { PacketsCard(state, settings) }
     }

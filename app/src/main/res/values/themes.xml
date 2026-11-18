@@ -3,7 +3,7 @@
         <item name="android:windowBackground">@color/bg</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
     <style name="Theme.PingPro.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/bg</item>

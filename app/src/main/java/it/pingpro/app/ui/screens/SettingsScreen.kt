@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import it.pingpro.app.data.AppSettings
 import it.pingpro.app.ping.PingConfig
 import it.pingpro.app.ui.components.AppCard
+import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.theme.Mono
 import it.pingpro.app.ui.theme.Palette
 
@@ -76,6 +77,16 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
         }
         item {
             AppCard {
+                Text("Aspetto", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(10.dp))
+                SegmentedToggle(listOf("Chiaro", "Scuro", "Automatico"), when (settings.theme) { "dark" -> 1; "system" -> 2; else -> 0 },
+                    { i -> update { it.copy(theme = listOf("light", "dark", "system")[i]) } })
+                Text("«Automatico» segue il tema scelto nelle impostazioni del telefono.", style = MaterialTheme.typography.bodySmall,
+                    color = Palette.TextDim, modifier = Modifier.padding(top = 8.dp))
+            }
+        }
+        item {
+            AppCard {
                 Text("Schermo", style = MaterialTheme.typography.titleMedium)
                 Toggle("Mantieni lo schermo acceso", "Durante il test lo schermo non si spegne da solo", settings.keepScreenOn) { v -> update { it.copy(keepScreenOn = v) } }
             }
@@ -84,7 +95,7 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
             AppCard {
                 Text("Aiuto", style = MaterialTheme.typography.titleMedium)
                 TextButton(onClick = onTutorial) { Text("Rivedi il tutorial iniziale") }
-                Text("PingPro 1.3 · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+                Text("PingPro 2.0 · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
             }
         }
     }

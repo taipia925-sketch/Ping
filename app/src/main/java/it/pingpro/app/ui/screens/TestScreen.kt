@@ -106,6 +106,10 @@ import it.pingpro.app.ping.SessionState
 import it.pingpro.app.ui.Format
 import it.pingpro.app.ui.TestUi
 import it.pingpro.app.ui.components.AppCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import it.pingpro.app.ui.theme.Manrope
+import it.pingpro.app.ui.components.HelpSheet
+import it.pingpro.app.ui.components.PillShape
 import it.pingpro.app.ui.components.HelpButton
 import it.pingpro.app.ui.components.HelpTopic
 import it.pingpro.app.ui.components.LatencyChart
@@ -142,16 +146,32 @@ fun TestScreen(
     val context = LocalContext.current
     val hasSession = session.status != LinkStatus.IDLE
 
+    val button: @Composable () -> Unit = {
+        StartStopButton(
+            running = session.running,
+            enabled = (vm.targetValid && !multiRunning) || session.running,
+            progress = if (session.running && session.config?.mode == PingMode.SINGLE)
+                session.stats.sent.toFloat() / (session.config.count.coerceAtLeast(1)) else null,
+            onStart = { onStartRequested(); vm.start() },
+            onStop = { vm.stop() },
+        )
+    }
+
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 22.dp, start = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("PingPro", style = MaterialTheme.typography.headlineLarge)
-                    Text("Test di comunicazione con le schede", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
+                    Text("Test", style = MaterialTheme.typography.headlineLarge)
+                    val cfg = session.config
+                    Text(
+                        if (hasSession && cfg != null) (session.deviceName?.let { "$it · " } ?: "") + (session.resolvedIp ?: cfg.target)
+                        else "Controlla se una scheda risponde",
+                        style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    )
                 }
                 IconButton(onClick = onOpenSettings) { Icon(Icons.Outlined.Settings, "Impostazioni", tint = Palette.TextDim) }
             }
@@ -161,48 +181,43 @@ fun TestScreen(
             SingleMultiSwitch(false, !session.running && !multiRunning) { if (it) onSwitchMulti() }
         }
 
-        item {
-            TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice, lan, onOpenNetwork)
-        }
-
-        item {
-            StartStopButton(
-                running = session.running,
-                enabled = (vm.targetValid && !multiRunning) || session.running,
-                progress = if (session.running && session.config?.mode == PingMode.SINGLE)
-                    session.stats.sent.toFloat() / (session.config.count.coerceAtLeast(1)) else null,
-                onStart = { onStartRequested(); vm.start() },
-                onStop = { vm.stop() },
-            )
-        }
-
-        if (hasSession) {
+        if (session.running) {
             item { StatusHero(session, settings) }
             item { StatsGrid(session, settings) }
             item { ChartCard(session) }
-            item { StripCard(session, settings) }
+            item { button() }
             item { PacketsCard(session, settings) }
             item { EventsCard(session.events) }
-            if (!session.running && session.lastRecordId != null) {
-                item {
-                    FinishedActions(
-                        onCopy = {
-                            val summary = history.firstOrNull { it.id == session.lastRecordId }
-                            if (summary != null) {
-                                Export.copy(context, "Risultati PING", Export.windowsStyle(summary, session.samples))
-                                toast("Risultati copiati negli appunti")
-                            }
-                        },
-                        onShare = {
-                            history.firstOrNull { it.id == session.lastRecordId }?.let { Export.share(context, it, session.samples, asCsv = false) }
-                        },
-                        onRepeat = { onStartRequested(); vm.start() },
-                        onDetail = { session.lastRecordId.let(onOpenRecord) },
-                    )
-                }
-            }
         } else {
-            item { IdleHint() }
+            item { TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice, lan, onOpenNetwork) }
+            item { button() }
+            if (hasSession) {
+                item { StatusHero(session, settings) }
+                item { StatsGrid(session, settings) }
+                item { ChartCard(session) }
+                if (session.lastRecordId != null) {
+                    item {
+                        FinishedActions(
+                            onCopy = {
+                                val summary = history.firstOrNull { it.id == session.lastRecordId }
+                                if (summary != null) {
+                                    Export.copy(context, "Risultati PING", Export.windowsStyle(summary, session.samples))
+                                    toast("Risultati copiati negli appunti")
+                                }
+                            },
+                            onShare = {
+                                history.firstOrNull { it.id == session.lastRecordId }?.let { Export.share(context, it, session.samples, asCsv = false) }
+                            },
+                            onRepeat = { onStartRequested(); vm.start() },
+                            onDetail = { session.lastRecordId.let(onOpenRecord) },
+                        )
+                    }
+                }
+                item { PacketsCard(session, settings) }
+                item { EventsCard(session.events) }
+            } else {
+                item { IdleHint() }
+            }
         }
     }
 }
@@ -359,19 +374,15 @@ fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?, onStar
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by androidx.compose.animation.core.animateFloatAsState(if (pressed) 0.97f else 1f, label = "s")
-    val brush = when {
-        running -> Brush.horizontalGradient(listOf(Color(0xFFFF4D6A), Color(0xFFE0365A)))
-        enabled -> Brush.horizontalGradient(listOf(Color(0xFF3D8BFF), Color(0xFF2F6BFF)))
-        else -> SolidColor(Palette.Surface3)
-    }
+    val bg by animateColorAsState(when { running -> Palette.Danger; enabled -> Palette.Accent; else -> Palette.Surface3 }, label = "btn")
     Box(
         Modifier
             .fillMaxWidth()
             .tourTarget("start")
-            .height(68.dp)
+            .height(60.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(24.dp))
-            .background(brush)
+            .clip(PillShape)
+            .background(bg)
             .clickable(interactionSource = interaction, indication = androidx.compose.material3.ripple(), enabled = enabled) {
                 if (running) onStop() else onStart()
             },
@@ -379,14 +390,14 @@ fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?, onStar
     ) {
         if (progress != null) {
             Box(Modifier.fillMaxSize()) {
-                Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(68.dp).background(Color.White.copy(alpha = 0.12f)))
+                Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(60.dp).background(Color.White.copy(alpha = 0.16f)))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(if (running) Icons.Outlined.Stop else Icons.Outlined.PlayArrow, null,
-                tint = if (enabled) Color.White else Palette.TextFaint, modifier = Modifier.size(28.dp))
-            Spacer(Modifier.width(10.dp))
-            Text(if (running) "INTERROMPI" else "AVVIA TEST", fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp,
+                tint = if (enabled) Color.White else Palette.TextFaint, modifier = Modifier.size(24.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(if (running) "Interrompi test" else "Avvia test", fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Manrope,
                 color = if (enabled) Color.White else Palette.TextFaint)
         }
     }
@@ -427,9 +438,25 @@ private fun finishedColor(s: SessionState): Color = when {
     else -> Palette.Green
 }
 
+/** Pillola di stato colorata: ONLINE, NON RISPONDE, … */
+@Composable
+fun StatusPill(text: String, color: Color) {
+    val bg = when (color) {
+        Palette.Green -> Palette.GreenBg
+        Palette.Amber -> Palette.AmberBg
+        Palette.Red -> Palette.DangerBg
+        else -> Palette.Surface2
+    }
+    Row(Modifier.clip(CircleShape).background(bg).padding(horizontal = 12.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(9.dp).clip(CircleShape).background(color))
+        Spacer(Modifier.width(8.dp))
+        Text(text, style = MaterialTheme.typography.labelMedium, color = color, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.6.sp)
+    }
+}
+
 @Composable
 fun StatusHero(s: SessionState, settings: AppSettings) {
-    val color by animateColorAsState(finishedColor(s), tween(400), label = "hero")
+    val color = finishedColor(s)
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(s.running) {
         while (s.running) { now = System.currentTimeMillis(); delay(250) }
@@ -438,69 +465,52 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
     val elapsed = ((s.endedAt ?: now) - (s.startedAt ?: now)).coerceAtLeast(0)
     val down = s.status == LinkStatus.DOWN
     val infinite = rememberInfiniteTransition(label = "pulse")
-    val alarm by infinite.animateFloat(0.10f, 0.28f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alarm")
+    val alarm by infinite.animateFloat(0.35f, 0.9f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alarm")
+    val cfg = s.config
 
     AppCard(
-        color = if (down) Color(0xFF2A0F17) else Palette.Surface,
-        borderColor = if (down) Palette.Red.copy(alpha = 0.3f + alarm) else color.copy(alpha = 0.25f),
+        color = if (down) Palette.DangerBg else Palette.Surface,
+        borderColor = if (down) Palette.Red.copy(alpha = alarm) else Palette.Outline,
+        padding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            StatusOrb(color = color, active = s.running, icon = when {
-                s.status == LinkStatus.DOWN || s.status == LinkStatus.ERROR -> Icons.Outlined.WifiOff
-                s.status == LinkStatus.UNSTABLE || s.status == LinkStatus.SLOW -> Icons.Outlined.WarningAmber
-                s.status == LinkStatus.FINISHED -> if (s.stats.lost == 0 && s.stats.sent > 0) Icons.Outlined.CheckCircle else Icons.Outlined.WarningAmber
-                else -> Icons.Outlined.Wifi
-            })
-            Spacer(Modifier.width(16.dp))
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(statusTitle(s), style = MaterialTheme.typography.titleLarge, color = color, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp)
-                    HelpButton(HelpTopic.STATUS, size = 16.dp)
-                }
-                Text(statusSubtitle(s), style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
-            }
+            StatusPill(statusTitle(s), color)
+            HelpButton(HelpTopic.STATUS, size = 16.dp)
+            Spacer(Modifier.weight(1f))
+            Text(
+                Format.clock(elapsed) + " · " + if (cfg?.mode == PingMode.SINGLE) "${s.stats.sent} di ${cfg.count}" else "continuo",
+                style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), color = Palette.TextDim,
+            )
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(if (s.running) "Ultima risposta" else "Latenza media", style = MaterialTheme.typography.labelMedium, color = Palette.TextDim)
+            HelpButton(HelpTopic.LATENCY, size = 14.dp)
+        }
+        val shown = if (s.running) s.stats.lastMs else s.stats.avgMs
+        val lastSample = s.samples.lastOrNull()
         Row(verticalAlignment = Alignment.Bottom) {
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (s.running) "LATENZA ATTUALE" else "LATENZA MEDIA", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
-                    HelpButton(HelpTopic.LATENCY, size = 14.dp)
-                }
-                val shown = if (s.running) s.stats.lastMs else s.stats.avgMs
-                val lastSample = s.samples.lastOrNull()
-                Row(verticalAlignment = Alignment.Bottom) {
-                    if (shown != null) {
-                        Text(Format.ms(shown), style = MaterialTheme.typography.displayLarge,
-                            color = latencyColor(shown, settings.highLatencyMs))
-                        Spacer(Modifier.width(6.dp))
-                        Text("ms", style = MaterialTheme.typography.titleLarge, color = Palette.TextDim, modifier = Modifier.padding(bottom = 12.dp))
-                    } else {
-                        Text(if (lastSample?.status?.isLost == true) "—" else "···", style = MaterialTheme.typography.displayLarge, color = Palette.TextFaint)
-                        if (lastSample?.status?.isLost == true) {
-                            Spacer(Modifier.width(10.dp))
-                            Text(lastSample.message ?: "Richiesta scaduta", style = MaterialTheme.typography.bodyMedium, color = Palette.Red,
-                                modifier = Modifier.padding(bottom = 14.dp))
-                        }
-                    }
-                }
-            }
-            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(bottom = 10.dp)) {
-                Text(Format.clock(elapsed), style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"), color = Palette.Text)
-                val cfg = s.config
-                Text(
-                    if (cfg?.mode == PingMode.SINGLE) "${s.stats.sent} di ${cfg.count}" else "continuo",
-                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim,
-                )
+            if (shown != null) {
+                Text(Format.ms(shown), style = MaterialTheme.typography.displayLarge, color = Palette.Text)
+                Spacer(Modifier.width(6.dp))
+                Text("ms", style = MaterialTheme.typography.headlineSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 10.dp))
+            } else {
+                Text(if (lastSample?.status?.isLost == true) "—" else "···", style = MaterialTheme.typography.displayLarge,
+                    color = if (lastSample?.status?.isLost == true) Palette.Red else Palette.TextFaint)
             }
         }
-        // Destinazione e rete.
+        Spacer(Modifier.height(6.dp))
+        val sentence = buildString {
+            append(statusSubtitle(s))
+            if (s.running && lastSample?.status?.isLost == true) append(": ").append((lastSample.message ?: "Richiesta scaduta.").trimEnd('.').lowercase())
+            else if (s.running && s.stats.avgMs != null) append(". Media ").append(Format.ms(s.stats.avgMs!!)).append(" ms")
+            append('.')
+        }
+        Text(sentence, style = MaterialTheme.typography.bodyLarge, color = if (down) Palette.OnDangerBg else Palette.TextDim)
         Spacer(Modifier.height(14.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Pill((s.deviceName?.let { "$it · " } ?: "") + (s.resolvedIp ?: s.config?.target ?: ""), Palette.AccentSoft, icon = Icons.Outlined.Router)
-        }
+        PacketStrip(s.samples, slots = 20, highLatency = settings.highLatencyMs, height = 10.dp)
         s.network?.let { n ->
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(14.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Pill(n.label, if (n.sameSubnet) Palette.Teal else Palette.Amber, icon = if (n.type == "Ethernet") Icons.Outlined.Lan else Icons.Outlined.Wifi)
                 HelpButton(HelpTopic.NETWORK, size = 14.dp)
@@ -509,35 +519,17 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
         AnimatedVisibility(down, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             val since = s.samples.takeLast(s.consecutiveLost).firstOrNull()?.timestamp
             Row(
-                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Palette.Red.copy(alpha = alarm + 0.05f)).padding(14.dp),
+                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Surface).padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.WarningAmber, null, tint = Palette.Red)
                 Spacer(Modifier.width(10.dp))
                 Text(
                     "La scheda non risponde" + (since?.let { " da ${Format.duration(now - it)} (dalle ${Format.time(it)})" } ?: ""),
-                    style = MaterialTheme.typography.titleSmall, color = Color.White,
+                    style = MaterialTheme.typography.titleSmall, color = Palette.OnDangerBg,
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun StatusOrb(color: Color, active: Boolean, icon: ImageVector) {
-    val infinite = rememberInfiniteTransition(label = "orb")
-    val wave by infinite.animateFloat(0f, 1f, infiniteRepeatable(tween(1600, easing = LinearEasing)), label = "wave")
-    val breathe by infinite.animateFloat(0.9f, 1f, infiniteRepeatable(tween(900, easing = FastOutSlowInEasing), RepeatMode.Reverse), label = "breathe")
-    Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            val r = size.minDimension / 2
-            if (active) {
-                drawCircle(color.copy(alpha = (1f - wave) * 0.45f), radius = r * (0.55f + 0.45f * wave), style = Stroke(2.dp.toPx()))
-            }
-            drawCircle(color.copy(alpha = 0.16f), radius = r * 0.62f * (if (active) breathe else 1f))
-            drawCircle(color.copy(alpha = 0.9f), radius = r * 0.62f * (if (active) breathe else 1f), style = Stroke(1.5.dp.toPx()), center = Offset(r, r))
-        }
-        Icon(icon, null, tint = color, modifier = Modifier.size(24.dp))
     }
 }
 
@@ -546,31 +538,44 @@ fun StatsGrid(s: SessionState, settings: AppSettings) {
     val st = s.stats
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatTile("Media", Format.msOrDash(st.avgMs), "ms", Modifier.weight(1f), latencyColor(st.avgMs, settings.highLatencyMs).takeIf { st.avgMs != null } ?: Palette.Text, HelpTopic.AVG)
-            StatTile("Minima", Format.msOrDash(st.minMs), "ms", Modifier.weight(1f), help = HelpTopic.MIN)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatTile("Massima", Format.msOrDash(st.maxMs), "ms", Modifier.weight(1f), help = HelpTopic.MAX)
-            StatTile("Jitter", Format.msOrDash(st.jitterMs), "ms", Modifier.weight(1f), help = HelpTopic.JITTER)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatTile("Inviati", st.sent.toString(), null, Modifier.weight(1f), help = HelpTopic.SENT)
-            StatTile("Ricevuti", st.received.toString(), null, Modifier.weight(1f), if (st.received > 0) Palette.Green else Palette.Text, HelpTopic.RECEIVED)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            StatTile("Ricevuti", st.received.toString(), "/${st.sent}", Modifier.weight(1f), help = HelpTopic.RECEIVED)
             StatTile("Persi", st.lost.toString(), null, Modifier.weight(1f), if (st.lost > 0) Palette.Red else Palette.Text, HelpTopic.LOST)
             StatTile("Perdita", Format.percent(st.lossPercent), null, Modifier.weight(1f),
                 when { st.sent == 0 -> Palette.Text; st.lossPercent == 0.0 -> Palette.Green; st.lossPercent < 5 -> Palette.Amber; else -> Palette.Red },
                 HelpTopic.LOSS_PERCENT)
         }
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            MiniStat("Media", st.avgMs, HelpTopic.AVG, Modifier.weight(1f), latencyColor(st.avgMs, settings.highLatencyMs).takeIf { st.avgMs != null })
+            MiniStat("Minima", st.minMs, HelpTopic.MIN, Modifier.weight(1f))
+            MiniStat("Massima", st.maxMs, HelpTopic.MAX, Modifier.weight(1f))
+            MiniStat("Jitter", st.jitterMs, HelpTopic.JITTER, Modifier.weight(1f))
+        }
     }
+}
+
+/** Riquadro compatto in millisecondi; toccandolo si apre la spiegazione. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MiniStat(label: String, value: Double?, help: HelpTopic, modifier: Modifier, color: Color? = null) {
+    var open by remember { mutableStateOf(false) }
+    Column(
+        modifier.clip(RoundedCornerShape(20.dp)).background(Palette.Surface).clickable { open = true }.padding(horizontal = 12.dp, vertical = 12.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, maxLines = 1)
+        Spacer(Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(Format.msOrDash(value), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Manrope, color = color ?: Palette.Text, maxLines = 1)
+            if (value != null) Text(" ms", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 2.dp))
+        }
+    }
+    if (open) HelpSheet(help) { open = false }
 }
 
 @Composable
 fun ChartCard(s: SessionState) {
     var all by remember { mutableStateOf(false) }
     AppCard {
-        SectionHeader("Andamento latenza", help = HelpTopic.CHART) {
+        SectionHeader("Andamento", help = HelpTopic.CHART) {
             Row(Modifier.clip(CircleShape).background(Palette.Surface2).padding(3.dp)) {
                 listOf("Ultimi 60" to false, "Tutto" to true).forEach { (label, v) ->
                     Text(label, style = MaterialTheme.typography.labelMedium,
@@ -747,7 +752,7 @@ private fun IdleHint() {
             "1" to "Collega il telefono al Wi-Fi della scheda.",
             "2" to "Tocca \"Gateway\" per usare il gateway predefinito, oppure scrivi l'IP della scheda (es. 192.168.1.100).",
             "3" to "Scegli Singolo (4 richieste) o Continuo (fino a quando premi Interrompi).",
-            "4" to "Premi AVVIA TEST e guarda i risultati in tempo reale. Hai dubbi? Apri la Guida: c'è anche la Diagnosi guidata.",
+            "4" to "Premi «Avvia test» e guarda i risultati in tempo reale. Hai dubbi? Apri la Guida: c'è anche la Diagnosi guidata.",
         ).forEach { (n, t) ->
             Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(26.dp).clip(CircleShape).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {

@@ -69,6 +69,7 @@ class SettingsRepository(context: Context) {
         soundOnAlert = prefs.getBoolean("sound", false),
         keepScreenOn = prefs.getBoolean("keepScreenOn", true),
         onboardingDone = prefs.getBoolean("onboardingDone", false),
+        theme = prefs.getString("theme", "light") ?: "light",
     )
 
     fun update(transform: (AppSettings) -> AppSettings) {
@@ -79,6 +80,7 @@ class SettingsRepository(context: Context) {
             .putInt("ttl", s.ttl).putInt("highLatencyMs", s.highLatencyMs)
             .putBoolean("vibrate", s.vibrateOnAlert).putBoolean("sound", s.soundOnAlert)
             .putBoolean("keepScreenOn", s.keepScreenOn).putBoolean("onboardingDone", s.onboardingDone)
+            .putString("theme", s.theme)
             .apply()
     }
 

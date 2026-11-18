@@ -58,6 +58,7 @@ import it.pingpro.app.ui.components.HelpButton
 import it.pingpro.app.ui.components.HelpTopic
 import it.pingpro.app.ui.components.IconBadge
 import it.pingpro.app.ui.components.Pill
+import it.pingpro.app.ui.components.PillShape
 import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.theme.Mono
 import it.pingpro.app.ui.theme.Palette
@@ -90,13 +91,13 @@ fun NetworkScreen(
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 22.dp, start = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Rete", style = MaterialTheme.typography.headlineLarge)
-                    Text("Configurazione IP del telefono · come ipconfig", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
+                    Text("Come ipconfig, sul telefono", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
                 }
                 IconButton(onClick = onRefresh) { Icon(Icons.Outlined.Refresh, "Aggiorna", tint = Palette.TextDim) }
             }
@@ -121,6 +122,7 @@ fun NetworkScreen(
         } else {
             item { GatewayHero(lan, running, onPing, onUse) }
             item { DetailsCard(lan, running, onPing, onUse) }
+            if (lan.wifiRssi != null) item { SignalCard(lan) }
         }
         items(others) { i -> OtherInterfaceCard(i) }
         item {
@@ -134,32 +136,26 @@ fun NetworkScreen(
 
 @Composable
 private fun GatewayHero(lan: NetInterfaceInfo, running: Boolean, onPing: (String) -> Unit, onUse: (String) -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF16305E), Color(0xFF0E1A33))))
-            .padding(20.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Pill(lan.type + (lan.interfaceName?.let { " · $it" } ?: ""), Palette.AccentSoft, icon = iconFor(lan.type))
-            Spacer(Modifier.width(8.dp))
+    AppCard(padding = PaddingValues(horizontal = 20.dp, vertical = 22.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            val band = lan.frequencyMHz?.let { if (it >= 5900) " · 6 GHz" else if (it >= 4900) " · 5 GHz" else " · 2,4 GHz" } ?: ""
+            Pill(lan.type + band, Palette.AccentSoft, icon = iconFor(lan.type))
             Pill(if (lan.validatedInternet) "Internet OK" else "Senza Internet", if (lan.validatedInternet) Palette.Green else Palette.Amber)
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("GATEWAY PREDEFINITO", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f))
-            HelpButton(HelpTopic.GATEWAY, size = 14.dp, tint = Color.White.copy(alpha = 0.6f))
+            Text("Gateway predefinito", style = MaterialTheme.typography.titleSmall, color = Palette.TextDim)
+            HelpButton(HelpTopic.GATEWAY, size = 15.dp)
         }
-        Text(lan.gateway ?: "Non presente", fontSize = 40.sp, fontWeight = FontWeight.Light, color = Color.White,
-            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"))
+        Text(lan.gateway ?: "Non presente", style = MaterialTheme.typography.displayMedium, color = if (lan.gateway != null) Palette.Text else Palette.TextFaint)
         if (lan.gateway == null) {
             Text("Questa rete non ha un gateway (rete isolata). Puoi comunque pingare le schede della sottorete.",
-                style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
+                style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
         }
-        Spacer(Modifier.height(4.dp))
-        Text("Telefono: ${lan.ipv4}/${lan.prefixLength}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.75f))
+        Text("Telefono: ${lan.ipv4}/${lan.prefixLength}", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
         lan.gateway?.let { gw ->
-            Spacer(Modifier.height(18.dp))
-            GatewayQuickRow(gw, running, onPing, onUse, onDark = true)
+            Spacer(Modifier.height(16.dp))
+            GatewayQuickRow(gw, running, onPing, onUse)
         }
     }
 }
@@ -168,22 +164,43 @@ private fun GatewayHero(lan: NetInterfaceInfo, running: Boolean, onPing: (String
 private fun GatewayQuickRow(gw: String, running: Boolean, onPing: (String) -> Unit, onUse: (String) -> Unit, onDark: Boolean = false) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
-            Modifier.weight(1.4f).height(54.dp).clip(RoundedCornerShape(18.dp))
+            Modifier.weight(1.3f).height(54.dp).clip(PillShape)
                 .background(if (running) Palette.Surface3 else Palette.Accent)
                 .clickable(enabled = !running) { onPing(gw) },
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Outlined.NetworkPing, null, tint = Color.White)
+            Icon(Icons.Outlined.NetworkPing, null, tint = if (running) Palette.TextFaint else Color.White, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("PING GATEWAY", color = Color.White, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+            Text("Ping gateway", color = if (running) Palette.TextFaint else Color.White, style = MaterialTheme.typography.labelLarge)
         }
         Row(
-            Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(18.dp))
-                .background(if (onDark) Color.White.copy(alpha = 0.12f) else Palette.Surface2)
-                .clickable { onUse(gw) },
+            Modifier.weight(1f).height(54.dp).clip(PillShape).background(Palette.AccentBg).clickable { onUse(gw) },
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Usa indirizzo", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text("Usa", color = Palette.AccentSoft, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+/** Potenza del segnale Wi-Fi con le tacche, come nella barra di stato del telefono. */
+@Composable
+private fun SignalCard(lan: NetInterfaceInfo) {
+    val rssi = lan.wifiRssi ?: return
+    val bars = when { rssi >= -55 -> 4; rssi >= -67 -> 3; rssi >= -75 -> 2; rssi >= -85 -> 1; else -> 0 }
+    val color = when { bars >= 3 -> Palette.Green; bars == 2 -> Palette.Amber; else -> Palette.Red }
+    AppCard(padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.height(28.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                listOf(8, 14, 20, 28).forEachIndexed { i, h ->
+                    Box(Modifier.width(6.dp).height(h.dp).clip(RoundedCornerShape(2.dp)).background(if (i < bars) color else Palette.Surface3))
+                }
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Segnale ${IpConfig.signalLabel(rssi).lowercase()} · $rssi dBm", style = MaterialTheme.typography.titleSmall)
+                lan.linkSpeedMbps?.let { Text("Collegamento a $it Mbps", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim) }
+            }
+            HelpButton(HelpTopic.SIGNAL, size = 16.dp)
         }
     }
 }
@@ -191,7 +208,7 @@ private fun GatewayQuickRow(gw: String, running: Boolean, onPing: (String) -> Un
 @Composable
 private fun DetailsCard(i: NetInterfaceInfo, running: Boolean, onPing: (String) -> Unit, onUse: (String) -> Unit) {
     AppCard(padding = PaddingValues(start = 20.dp, end = 8.dp, top = 18.dp, bottom = 10.dp)) {
-        Text("Dettagli connessione", style = MaterialTheme.typography.titleMedium)
+        Text("Dettagli", style = MaterialTheme.typography.titleMedium)
         Spacer(Modifier.height(6.dp))
         InfoRow("Indirizzo IPv4 telefono", i.ipv4, HelpTopic.PHONE_IP)
         InfoRow("Subnet mask", i.subnetMask?.let { "$it  (/${i.prefixLength})" }, HelpTopic.SUBNET)
@@ -199,8 +216,6 @@ private fun DetailsCard(i: NetInterfaceInfo, running: Boolean, onPing: (String) 
         i.hostRange?.let { (a, b) -> InfoRow("Indirizzi della rete", "$a – $b", HelpTopic.SUBNET) }
         i.dns.forEachIndexed { k, d -> InfoRow(if (k == 0) "Server DNS" else "", d, if (k == 0) HelpTopic.DNS else null, pingable = true, running = running, onPing = onPing, onUse = onUse) }
         i.dhcpServer?.let { InfoRow("Server DHCP", it, HelpTopic.DHCP, pingable = true, running = running, onPing = onPing, onUse = onUse) }
-        i.wifiRssi?.let { InfoRow("Segnale Wi-Fi", "$it dBm · ${IpConfig.signalLabel(it)}", HelpTopic.SIGNAL) }
-        i.linkSpeedMbps?.let { InfoRow("Velocità collegamento", "$it Mbps") }
         i.frequencyMHz?.let { InfoRow("Banda", if (it >= 5900) "6 GHz" else if (it >= 4900) "5 GHz" else "2,4 GHz") }
         i.ipv6.firstOrNull()?.let { InfoRow("IPv6 locale", it) }
         i.mtu?.let { InfoRow("MTU", it.toString()) }

@@ -15,6 +15,11 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import it.pingpro.app.ui.AppRoot
 import it.pingpro.app.ui.theme.PingProTheme
+import it.pingpro.app.ui.theme.Palette
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -40,6 +45,18 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val settings by app.settings.settings.collectAsState()
+            val systemDark = isSystemInDarkTheme()
+            val dark = when (settings.theme) { "dark" -> true; "system" -> systemDark; else -> false }
+            Palette.dark = dark
+            LaunchedEffect(dark) {
+                enableEdgeToEdge(
+                    statusBarStyle = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                    navigationBarStyle = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                    else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
+                )
+            }
             PingProTheme {
                 AppRoot(onFirstTestStarting = ::askNotificationPermission)
             }

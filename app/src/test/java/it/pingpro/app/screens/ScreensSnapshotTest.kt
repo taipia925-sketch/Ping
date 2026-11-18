@@ -194,6 +194,12 @@ class ScreensSnapshotTest {
         HistoryScreen(batch + hist, {}, { _, _ -> }, {})
     }
 
+    @Test fun test_running_dark() {
+        it.pingpro.app.ui.theme.Palette.dark = true
+        try { shot { TestScreen(FakeUi("192.168.1.100", PingMode.CONTINUOUS, devices), session(48, setOf(21, 22, 23)), devices, emptyList(), AppSettings(), {}, {}, {}, {}, lan = wifi) } }
+        finally { it.pingpro.app.ui.theme.Palette.dark = false }
+    }
+
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }
     @Test fun devices() = shot { DevicesScreen(devices, hist, false, {}, {}, {}) }
     @Test fun guide() = pages(4) { GuideScreen({}, {}) }

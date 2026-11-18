@@ -150,8 +150,8 @@ fun LatencyChart(
                 val lastIdx = pts.indexOfLast { it.rttMs != null }
                 if (lastIdx >= 0) {
                     val c = Offset(x(lastIdx), y(pts[lastIdx].rttMs!!))
-                    drawCircle(series.color.copy(alpha = 0.25f), 7.dp.toPx(), c)
-                    drawCircle(Color.White, 3.dp.toPx(), c)
+                    drawCircle(series.color.copy(alpha = 0.22f), 8.dp.toPx(), c)
+                    drawCircle(series.color, 4.dp.toPx(), c)
                 }
             }
         }

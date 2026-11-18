@@ -17,6 +17,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -137,7 +139,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
         containerColor = Palette.Bg,
         bottomBar = {
             if (tabs.any { it.route == currentRoute }) {
-                NavigationBar(modifier = Modifier.tourTarget("nav"), containerColor = Palette.Surface, tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
+                NavigationBar(modifier = Modifier.tourTarget("nav"), containerColor = Palette.NavBar, tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
                     tabs.forEach { t ->
                         NavigationBarItem(
                             selected = currentRoute == t.route,
@@ -150,10 +152,11 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                                     }
                                 } else Icon(t.icon, t.label)
                             },
-                            label = { Text(t.label) },
+                            label = { Text(t.label, style = MaterialTheme.typography.labelSmall,
+                                fontWeight = if (currentRoute == t.route) FontWeight.ExtraBold else FontWeight.SemiBold) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = Palette.AccentSoft, selectedTextColor = Palette.Text,
-                                indicatorColor = Palette.Accent.copy(alpha = 0.16f),
+                                indicatorColor = Palette.AccentBg,
                                 unselectedIconColor = Palette.TextDim, unselectedTextColor = Palette.TextDim,
                             ),
                         )
@@ -298,7 +301,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     deleting?.let { d ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            containerColor = Palette.Surface2,
+            containerColor = Palette.Surface,
             title = { Text("Eliminare \"${d.name}\"?") },
             text = { Text("La scheda verrà rimossa dall'elenco. I test già eseguiti restano nello storico.") },
             confirmButton = { TextButton(onClick = { vm.deleteDevice(d.id); deleting = null }) { Text("Elimina", color = Palette.Red) } },

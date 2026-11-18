@@ -179,7 +179,7 @@ fun HistoryScreen(
     if (confirmClear) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
-            containerColor = Palette.Surface2,
+            containerColor = Palette.Surface,
             title = { Text("Svuotare lo storico?") },
             text = { Text("Tutti i test salvati verranno eliminati definitivamente.") },
             confirmButton = { TextButton(onClick = { onClear(); confirmClear = false }) { Text("Elimina tutto", color = Palette.Red) } },
@@ -358,7 +358,7 @@ fun HistoryDetailScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onRep
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
-            containerColor = Palette.Surface2,
+            containerColor = Palette.Surface,
             title = { Text("Eliminare questo test?") },
             confirmButton = { TextButton(onClick = { vm.deleteRecord(id); confirmDelete = false; onBack() }) { Text("Elimina", color = Palette.Red) } },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Annulla") } },

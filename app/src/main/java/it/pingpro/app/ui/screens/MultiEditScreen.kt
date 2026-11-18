@@ -230,7 +230,7 @@ fun MultiEditScreen(
                 }
                 Box(Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Accent).clickable(onClick = onBack),
                     contentAlignment = Alignment.Center) {
-                    Text("FATTO", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Fatto", color = Color.White, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -240,7 +240,7 @@ fun MultiEditScreen(
         var name by remember { mutableStateOf(listName ?: "") }
         AlertDialog(
             onDismissRequest = { saveDialog = false },
-            containerColor = Palette.Surface2,
+            containerColor = Palette.Surface,
             title = { Text("Salva come gruppo") },
             text = {
                 Column {
@@ -257,7 +257,7 @@ fun MultiEditScreen(
     deleting?.let { g ->
         AlertDialog(
             onDismissRequest = { deleting = null },
-            containerColor = Palette.Surface2,
+            containerColor = Palette.Surface,
             title = { Text("Eliminare il gruppo «${g.name}»?") },
             text = { Text("Le schede salvate e lo storico non vengono toccati.") },
             confirmButton = { TextButton(onClick = { onDeleteGroup(g); deleting = null }) { Text("Elimina", color = Palette.Red) } },

@@ -12,7 +12,7 @@ enum class HelpTopic(val title: String, val body: String) {
     MODE(
         "Test singolo o continuativo",
         "• Singolo: invia 4 richieste e si ferma, esattamente come il comando \"ping 192.168.1.100\" di Windows.\n\n" +
-            "• Continuativo: invia circa una richiesta al secondo finché non premi INTERROMPI, come \"ping -t 192.168.1.100\".\n\n" +
+            "• Continuativo: invia circa una richiesta al secondo finché non premi «Interrompi test», come \"ping -t 192.168.1.100\".\n\n" +
             "Il continuativo è utile per sorvegliare una scheda nel tempo, ad esempio mentre si muove un cavo o si riavvia un apparato."
     ),
     STATUS(

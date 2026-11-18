@@ -145,6 +145,8 @@ data class AppSettings(
     val soundOnAlert: Boolean = false,
     val keepScreenOn: Boolean = true,
     val onboardingDone: Boolean = false,
+    /** "light" (predefinito), "dark" oppure "system" (segue il telefono). */
+    val theme: String = "light",
 )
 
 /** Una scheda da controllare nel test di più schede. */

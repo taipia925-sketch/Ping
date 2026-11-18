@@ -8,6 +8,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -142,23 +145,34 @@ fun MultiScreen(
     var detail by remember { mutableStateOf<String?>(null) }
     val hasRun = !state.isIdle
 
+    // Orologio che fa aggiornare la durata nel titolo durante il test.
+    var tick by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(state.running) { while (state.running) { tick = System.currentTimeMillis(); delay(500) } }
+    @Suppress("UNUSED_EXPRESSION") tick
+
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 22.dp, start = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("PingPro", style = MaterialTheme.typography.headlineLarge)
-                    Text("Più schede insieme", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
+                    Text(if (hasRun) (state.groupName ?: "Più schede") else "Test", style = MaterialTheme.typography.headlineLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        if (hasRun) "${state.targets.size} schede · ${if (state.mode == PingMode.CONTINUOUS) "continuo" else "singolo"} · ${Format.clock(elapsedOf(state))}"
+                        else "Controlla più schede insieme",
+                        style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim,
+                    )
                 }
                 IconButton(onClick = onOpenSettings) { Icon(Icons.Outlined.Settings, "Impostazioni", tint = Palette.TextDim) }
             }
         }
         item { SingleMultiSwitch(true, !state.running && !singleRunning) { if (!it) onSwitchSingle() } }
 
-        item {
+        if (!state.running) {
+            item {
             AppCard {
                 SectionHeader("Schede da controllare", help = HelpTopic.MULTI) {
                     if (!state.running) Row(
@@ -221,6 +235,10 @@ fun MultiScreen(
             }
         }
 
+        }
+        if (state.running) {
+            item { MultiSummary(state) }
+        }
         item {
             StartStopButton(
                 running = state.running,
@@ -230,9 +248,8 @@ fun MultiScreen(
                 onStart = onStart, onStop = onStop,
             )
         }
-
         if (hasRun) {
-            item { MultiSummary(state) }
+            if (!state.running) item { MultiSummary(state) }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 4.dp)) {
                     Text("Schede", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -243,10 +260,11 @@ fun MultiScreen(
             val list = if (sortProblems) state.targets.sortedBy {
                 when (it.health) { TargetState.Health.DOWN -> 0; TargetState.Health.WARN -> 1; TargetState.Health.WAITING -> 2; TargetState.Health.OK -> 3 }
             } else state.targets
-            items(list.chunked(2), key = { row -> row.joinToString { it.target.address } }) { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    row.forEach { t -> TargetTile(t, settings, Modifier.weight(1f)) { detail = t.target.address } }
-                    if (row.size == 1) Spacer(Modifier.weight(1f))
+            item {
+                AppCard(padding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)) {
+                    list.forEachIndexed { idx, t ->
+                        TargetRow(t, settings, last = idx == list.lastIndex) { detail = t.target.address }
+                    }
                 }
             }
             if (!state.running) {
@@ -307,110 +325,117 @@ fun compactList(targets: List<MultiTarget>): String {
     return if (labels.size <= 4) labels.joinToString(", ") else labels.take(3).joinToString(", ") + " e altre ${labels.size - 3}"
 }
 
+fun elapsedOf(m: MultiState): Long = ((m.endedAt ?: System.currentTimeMillis()) - (m.startedAt ?: System.currentTimeMillis())).coerceAtLeast(0)
+
 @Composable
 private fun MultiSummary(m: MultiState) {
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(m.running) {
-        while (m.running) { now = System.currentTimeMillis(); delay(500) }
-        now = System.currentTimeMillis()
-    }
-    val elapsed = ((m.endedAt ?: now) - (m.startedAt ?: now)).coerceAtLeast(0)
     val down = m.targets.filter { it.health == TargetState.Health.DOWN }
-    val pulse by rememberInfiniteTransition(label = "md").animateFloat(0.10f, 0.26f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "mdp")
-    AppCard(
-        color = if (down.isNotEmpty() && m.running) Color(0xFF2A0F17) else Palette.Surface,
-        borderColor = if (down.isNotEmpty()) Palette.Red.copy(alpha = 0.3f + if (m.running) pulse else 0f) else Palette.Outline,
-    ) {
+    val total = m.targets.size.coerceAtLeast(1)
+    AppCard(padding = PaddingValues(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                when {
-                    m.running -> "Test in corso"
-                    down.isEmpty() && m.warnCount == 0 -> "Tutte le schede rispondono"
-                    else -> "Test completato"
-                },
-                style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f),
-                color = if (!m.running && down.isEmpty() && m.warnCount == 0) Palette.Green else Palette.Text,
-            )
-            Column(horizontalAlignment = Alignment.End) {
-                Text(Format.clock(elapsed), style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"))
-                Text(if (m.mode == PingMode.CONTINUOUS) "continuo" else "singolo · ${m.count} per scheda", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
+            Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
+                val track = Palette.Surface2; val g = Palette.Green; val a = Palette.Amber; val r = Palette.Red
+                Canvas(Modifier.fillMaxSize()) {
+                    val sw = 11.dp.toPx()
+                    val inset = sw / 2
+                    val arc = androidx.compose.ui.geometry.Size(size.width - sw, size.height - sw)
+                    val tl = androidx.compose.ui.geometry.Offset(inset, inset)
+                    drawArc(track, 0f, 360f, false, tl, arc, style = Stroke(sw))
+                    var start = -90f
+                    listOf(m.okCount to g, m.warnCount to a, m.downCount to r).forEach { (n, c) ->
+                        if (n > 0) {
+                            val sweep = 360f * n / total
+                            drawArc(c, start + 1.5f, (sweep - 3f).coerceAtLeast(1f), false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
+                            start += sweep
+                        }
+                    }
+                }
+                Text("${m.okCount}/${m.targets.size}", style = MaterialTheme.typography.titleLarge.copy(fontFeatureSettings = "tnum"))
             }
-        }
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Counter("Rispondono", m.okCount, Palette.Green, Modifier.weight(1f))
-            Counter("Instabili", m.warnCount, Palette.Amber, Modifier.weight(1f))
-            Counter("Non rispondono", m.downCount, Palette.Red, Modifier.weight(1f))
-        }
-        // Barra proporzionale.
-        Spacer(Modifier.height(14.dp))
-        Row(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(Palette.Surface3)) {
-            listOf(m.okCount to Palette.Green, m.warnCount to Palette.Amber, m.downCount to Palette.Red, m.waitingCount to Palette.Surface3).forEach { (n, c) ->
-                if (n > 0) Box(Modifier.weight(n.toFloat()).fillMaxSize().background(c))
+            Spacer(Modifier.width(18.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                LegendLine(Palette.Green, "${m.okCount} " + if (m.okCount == 1) "risponde" else "rispondono", m.okCount > 0)
+                LegendLine(Palette.Amber, "${m.warnCount} " + if (m.warnCount == 1) "instabile" else "instabili", m.warnCount > 0)
+                LegendLine(Palette.Red, "${m.downCount} " + if (m.downCount == 1) "non risponde" else "non rispondono", m.downCount > 0)
+                if (m.waitingCount > 0) LegendLine(Palette.TextFaint, "${m.waitingCount} in attesa", true)
             }
         }
         AnimatedVisibility(down.isNotEmpty()) {
             Row(
-                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Palette.Red.copy(alpha = 0.16f)).padding(14.dp),
+                Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.DangerBg).padding(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                Icon(Icons.Outlined.WarningAmber, null, tint = Palette.Red)
+                Icon(Icons.Outlined.WarningAmber, null, tint = Palette.Red, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
-                Text("Non rispondono: " + down.joinToString(", ") { it.label }, style = MaterialTheme.typography.titleSmall, color = Color.White)
+                Text((if (down.size == 1) "Non risponde: " else "Non rispondono: ") + down.joinToString(", ") { it.label },
+                    style = MaterialTheme.typography.titleSmall, color = Palette.OnDangerBg)
+            }
+        }
+        if (!m.running && down.isEmpty() && m.warnCount == 0 && m.waitingCount == 0) {
+            Row(Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.GreenBg).padding(14.dp)) {
+                Text("Tutte le schede hanno risposto a ogni richiesta.", style = MaterialTheme.typography.titleSmall, color = Palette.Green)
             }
         }
     }
 }
 
 @Composable
-private fun Counter(label: String, n: Int, color: Color, modifier: Modifier) {
-    Column(modifier.clip(RoundedCornerShape(18.dp)).background(color.copy(alpha = 0.10f)).padding(vertical = 12.dp, horizontal = 12.dp)) {
-        Text("$n", style = MaterialTheme.typography.headlineMedium.copy(fontFeatureSettings = "tnum"), color = if (n > 0) color else Palette.TextFaint)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Palette.TextDim, maxLines = 2, minLines = 2)
+private fun LegendLine(color: Color, text: String, strong: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(10.dp).clip(CircleShape).background(color))
+        Spacer(Modifier.width(8.dp))
+        Text(text, style = MaterialTheme.typography.titleSmall, color = if (strong) (if (color == Palette.Red) Palette.Red else Palette.Text) else Palette.TextDim,
+            fontWeight = if (strong) FontWeight.ExtraBold else FontWeight.SemiBold)
     }
 }
 
 @Composable
-private fun TargetTile(t: TargetState, settings: AppSettings, modifier: Modifier, onClick: () -> Unit) {
+private fun TargetRow(t: TargetState, settings: AppSettings, last: Boolean, onClick: () -> Unit) {
     val c = healthColor(t.health)
-    val border by animateColorAsState(c.copy(alpha = if (t.health == TargetState.Health.WAITING) 0.15f else 0.45f), label = "tb")
-    val down = t.health == TargetState.Health.DOWN
-    Column(
-        modifier.clip(RoundedCornerShape(20.dp)).background(if (down) Color(0xFF2A0F17) else Palette.Surface)
-            .border(1.dp, border, RoundedCornerShape(20.dp)).clickable(onClick = onClick).padding(14.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(9.dp).clip(CircleShape).background(c))
+    val bg = when (t.health) {
+        TargetState.Health.OK -> Palette.GreenBg
+        TargetState.Health.WARN -> Palette.AmberBg
+        TargetState.Health.DOWN -> Palette.DangerBg
+        TargetState.Health.WAITING -> Palette.Surface2
+    }
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(bg), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(10.dp).clip(CircleShape).background(c))
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(t.label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    t.error ?: ((if (t.name != null) "${t.ip ?: t.target.address} · " else "") + "${t.stats.received}/${t.stats.sent} · ${Format.percent(t.stats.lossPercent)} persi"),
+                    style = MaterialTheme.typography.bodySmall, color = if (t.stats.lost > 0 || t.error != null) Palette.Amber else Palette.TextDim,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+            }
             Spacer(Modifier.width(8.dp))
-            Text(t.label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        }
-        if (t.name != null) Text(t.ip ?: t.target.address, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = Palette.TextFaint, maxLines = 1)
-        else Text(" ", style = MaterialTheme.typography.bodySmall)
-        Spacer(Modifier.height(6.dp))
-        val last = t.recent.lastOrNull()
-        Row(verticalAlignment = Alignment.Bottom) {
+            val lastS = t.recent.lastOrNull()
             when {
-                t.error != null -> Text("Errore", style = MaterialTheme.typography.titleLarge, color = Palette.Red)
-                t.stats.sent == 0 -> Text("···", style = MaterialTheme.typography.titleLarge, color = Palette.TextFaint)
-                t.finished && t.stats.avgMs != null -> {
-                    Text(Format.ms(t.stats.avgMs!!), style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"), color = latencyColor(t.stats.avgMs, settings.highLatencyMs))
-                    Text(" ms media", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 3.dp))
-                }
-                last?.rttMs != null && !t.finished -> {
-                    Text(Format.ms(last.rttMs), style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"), color = latencyColor(last.rttMs, settings.highLatencyMs))
-                    Text(" ms", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 3.dp))
-                }
-                else -> Text(if (down) "Non risponde" else "Perso", style = MaterialTheme.typography.titleMedium, color = Palette.Red)
+                t.error != null -> Text("Errore", style = MaterialTheme.typography.titleSmall, color = Palette.Red)
+                t.stats.sent == 0 -> Text("···", style = MaterialTheme.typography.titleMedium, color = Palette.TextFaint)
+                t.health == TargetState.Health.DOWN && (t.finished || lastS?.status?.isLost == true) ->
+                    Text("Non risponde", style = MaterialTheme.typography.titleSmall, color = Palette.Red)
+                t.finished && t.stats.avgMs != null -> MsValue(t.stats.avgMs!!, settings, "media")
+                lastS?.rttMs != null -> MsValue(lastS.rttMs, settings, null)
+                else -> Text("Perso", style = MaterialTheme.typography.titleSmall, color = Palette.Red)
             }
         }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            t.error ?: "${t.stats.received}/${t.stats.sent} · ${Format.percent(t.stats.lossPercent)} persi",
-            style = MaterialTheme.typography.bodySmall, color = if (t.stats.lost > 0 || t.error != null) Palette.Amber else Palette.TextDim,
-            maxLines = 2, overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(8.dp))
-        PacketStrip(t.recent, slots = 20, highLatency = settings.highLatencyMs, height = 10.dp)
+        if (!last) Box(Modifier.fillMaxWidth().height(1.dp).background(Palette.Outline))
     }
 }
 
+@Composable
+private fun MsValue(v: Double, settings: AppSettings, caption: String?) {
+    Column(horizontalAlignment = Alignment.End) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(Format.ms(v), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, fontFamily = it.pingpro.app.ui.theme.Manrope,
+                color = if (v >= settings.highLatencyMs) Palette.Amber else Palette.Text)
+            Text(" ms", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 2.dp))
+        }
+        if (caption != null) Text(caption, style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
+    }
+}

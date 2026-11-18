@@ -145,7 +145,7 @@ fun DeviceEditorDialog(draft: DeviceDraft, onDismiss: () -> Unit, onSave: (Devic
     val colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Palette.Accent, unfocusedBorderColor = Palette.OutlineStrong)
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Palette.Surface2,
+        containerColor = Palette.Surface,
         shape = RoundedCornerShape(28.dp),
         title = { Text(if (draft.id == null) "Nuova scheda" else "Modifica scheda") },
         text = {

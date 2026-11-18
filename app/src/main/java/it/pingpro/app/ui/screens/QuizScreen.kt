@@ -186,7 +186,7 @@ fun QuizScreen(onBack: () -> Unit) {
                                         if (index == quizQuestions.lastIndex) finished = true else { index++; chosen = null }
                                     },
                                 contentAlignment = Alignment.Center,
-                            ) { Text(if (index == quizQuestions.lastIndex) "VEDI IL RISULTATO" else "DOMANDA SUCCESSIVA", color = Color.White, fontWeight = FontWeight.Bold) }
+                            ) { Text(if (index == quizQuestions.lastIndex) "Vedi il risultato" else "Domanda successiva", color = Color.White, fontWeight = FontWeight.Bold) }
                         }
                     }
                 }
@@ -262,6 +262,6 @@ private fun QuizResult(score: Int, onRestart: () -> Unit) {
         )
         Spacer(Modifier.height(24.dp))
         Box(Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).clickable(onClick = onRestart),
-            contentAlignment = Alignment.Center) { Text("RIPROVA", fontWeight = FontWeight.Bold) }
+            contentAlignment = Alignment.Center) { Text("Riprova", style = MaterialTheme.typography.labelLarge) }
     }
 }

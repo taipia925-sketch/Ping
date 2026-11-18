@@ -48,6 +48,9 @@ import it.pingpro.app.ui.theme.Palette
 
 val CardShape = RoundedCornerShape(26.dp)
 
+/** Forma "a pillola" dei pulsanti principali. */
+val PillShape = RoundedCornerShape(50)
+
 @Composable
 fun AppCard(
     modifier: Modifier = Modifier,
@@ -104,7 +107,7 @@ fun HelpSheet(topic: HelpTopic, onDismiss: () -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Palette.Surface2,
+        containerColor = Palette.Surface,
         dragHandle = {
             Box(Modifier.padding(top = 12.dp, bottom = 4.dp).size(40.dp, 4.dp).clip(CircleShape).background(Palette.OutlineStrong))
         },
@@ -135,17 +138,17 @@ fun StatTile(
     val color by animateColorAsState(valueColor, label = "statColor")
     Column(
         modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(Palette.Surface2)
+            .clip(RoundedCornerShape(22.dp))
+            .background(Palette.Surface)
             .padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 14.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, maxLines = 1,
+            Text(label, style = MaterialTheme.typography.labelMedium, color = Palette.TextDim, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (help != null) HelpButton(help, size = 15.dp) else Spacer(Modifier.height(29.dp))
         }
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(value, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = color, maxLines = 1,
+            Text(value, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = color, maxLines = 1,
                 style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"))
             if (unit != null) {
                 Spacer(Modifier.width(3.dp))
@@ -174,21 +177,20 @@ fun SegmentedToggle(options: List<String>, selected: Int, onSelect: (Int) -> Uni
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Palette.Surface2)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (Palette.dark) Palette.Surface2 else Palette.Surface3)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         options.forEachIndexed { i, label ->
             val sel = i == selected
-            val bg by animateColorAsState(if (sel) Palette.Surface3 else Color.Transparent, label = "seg")
+            val bg by animateColorAsState(if (sel) (if (Palette.dark) Palette.Surface3 else Palette.Surface) else Color.Transparent, label = "seg")
             val fg by animateColorAsState(if (sel) Palette.Text else Palette.TextDim, label = "segFg")
             Box(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(14.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(bg)
-                    .then(if (sel) Modifier.border(1.dp, Palette.Outline, RoundedCornerShape(14.dp)) else Modifier)
                     .clickable(enabled = enabled) { onSelect(i) }
                     .padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,

@@ -14,9 +14,13 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ---
 
+**Design (v2.0):** interfaccia chiara in stile Samsung One UI, carattere Manrope (licenza SIL OFL, `docs/licenses/Manrope-OFL.txt`); tema scuro e automatico disponibili in Impostazioni › Aspetto.
+
+![Tema chiaro e scuro](docs/screenshots/theme.png)
+
 ## 1. Installazione sul Samsung Galaxy (S26 Ultra o altri)
 
-1. Scarica sul telefono il file **[`release/PingPro-1.3.0.apk`](release/PingPro-1.3.0.apk)**
+1. Scarica sul telefono il file **[`release/PingPro-2.0.0.apk`](release/PingPro-2.0.0.apk)**
    (da GitHub: apri il file → pulsante **Download raw file**).
 2. Apri il file scaricato (dalla notifica del download oppure da **Archivio › Download**).
 3. Alla prima installazione Android chiede di autorizzare la fonte:
