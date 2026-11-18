@@ -69,7 +69,15 @@ fun FoundDevice.title(savedName: String?): String = savedName ?: name ?: when {
     else -> address
 }
 
-/** Elenco in testo dei dispositivi trovati (per «Copia»). */
+/** Dispositivi da pingare: i selezionati (o tutti), senza il telefono stesso. */
+fun pingTargets(found: List<FoundDevice>, selected: Set<String>): List<FoundDevice> =
+    found.filter { (selected.isEmpty() || it.address in selected) && !it.isPhone }
+
+/** Solo gli indirizzi IP, uno per riga e in ordine: pronti da incollare (anche in «Più schede»). */
+fun ipList(devices: List<FoundDevice>): String =
+    devices.sortedBy { NetworkScanner.ipKey(it.address) }.joinToString("\n") { it.address }
+
+/** Elenco descrittivo dei dispositivi trovati. */
 fun scanReport(s: ScanState, names: (String) -> String?): String = buildString {
     appendLine("PingPro – Ricerca dispositivi ${s.from} – ${s.to}")
     s.startedAt?.let { appendLine(Format.dateTimeFull(it)) }
@@ -92,6 +100,7 @@ fun ScanScreen(
     onStop: () -> Unit,
     onPing: (String) -> Unit,
     onAddToMulti: (List<FoundDevice>) -> Unit,
+    onPingAll: (List<FoundDevice>) -> Unit = {},
     onSave: (List<FoundDevice>) -> Unit,
     onCopy: (String) -> Unit,
     onBack: () -> Unit,
@@ -191,6 +200,28 @@ fun ScanScreen(
         }
 
         if (state.found.isNotEmpty()) {
+            if (!state.running) item {
+                // Pulsante principale: manda i dispositivi trovati direttamente al ping (test di più schede).
+                val chosen = pingTargets(state.found, selected)
+                val enabled = chosen.isNotEmpty() && !busy
+                Row(
+                    Modifier.fillMaxWidth().height(60.dp).clip(PillShape).background(if (enabled) Palette.Green else Palette.Surface3)
+                        .clickable(enabled = enabled) { onPingAll(chosen) },
+                    horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Outlined.NetworkPing, null, tint = if (enabled) Color.White else Palette.TextFaint)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (selected.isEmpty()) "Pinga tutti (${chosen.size})" else if (chosen.size == 1) "Pinga il selezionato" else "Pinga i ${chosen.size} selezionati",
+                        style = MaterialTheme.typography.labelLarge, color = if (enabled) Color.White else Palette.TextFaint,
+                    )
+                }
+                Text(
+                    "Avvia subito il test continuo di più schede con " + (if (selected.isEmpty()) "tutti i dispositivi trovati" else "i dispositivi selezionati") +
+                        (if (state.found.any { it.isPhone && (selected.isEmpty() || it.address in selected) }) " (escluso questo telefono)." else "."),
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, modifier = Modifier.padding(top = 6.dp, start = 8.dp, end = 8.dp),
+                )
+            }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
                     Text("Dispositivi che rispondono", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -260,8 +291,11 @@ fun ScanScreen(
                 }
             }
             if (!state.running) item {
-                TextButton(onClick = { onCopy(scanReport(state, savedName)) }) {
-                    Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Copia elenco")
+                val toCopy = state.found.filter { it.address in selected }.ifEmpty { state.found }
+                TextButton(onClick = { onCopy(ipList(toCopy)) }) {
+                    Icon(Icons.Outlined.ContentCopy, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp))
+                    Text(if (toCopy.size == 1) "Copia 1 indirizzo IP" else "Copia ${toCopy.size} indirizzi IP" +
+                        if (selected.isNotEmpty() && toCopy.size < state.found.size) " (selezionati)" else "")
                 }
             }
         }

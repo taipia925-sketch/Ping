@@ -284,6 +284,15 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                             toast(if (added == 0) "Già tutti nell'elenco di Più schede" else "Aggiunti $added a Più schede")
                             vm.multiMode = true; goTab("test")
                         },
+                        onPingAll = { list ->
+                            if (vm.anyRunning) toast("C'è già un test in corso") else {
+                                vm.setMultiList(list.map { d -> MultiTarget(d.address, vm.deviceFor(d.address)?.name ?: d.name ?: if (d.isGateway) "Router / gateway" else null) },
+                                    "Dispositivi trovati")
+                                vm.multiRunMode = PingMode.CONTINUOUS
+                                vm.multiMode = true
+                                startTest(); vm.startMulti(); goTab("test")
+                            }
+                        },
                         onSave = { list ->
                             var n = 0
                             list.forEach { d ->
@@ -294,7 +303,9 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                             }
                             toast(if (n == 0) "Erano già tutti salvati" else "Salvate $n schede (rinominale in «Schede»)")
                         },
-                        onCopy = { txt -> Export.copy(context, "Dispositivi", txt); toast("Elenco copiato negli appunti") },
+                        onCopy = { txt -> Export.copy(context, "Indirizzi IP", txt)
+                            val n = txt.lines().count { it.isNotBlank() }
+                            toast(if (n == 1) "1 indirizzo IP copiato" else "$n indirizzi IP copiati") },
                         onBack = { nav.popBackStack() },
                     )
                 }

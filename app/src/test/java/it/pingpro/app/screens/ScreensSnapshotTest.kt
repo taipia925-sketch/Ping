@@ -214,12 +214,12 @@ class ScreensSnapshotTest {
         )
         it.pingpro.app.ui.screens.ScanScreen(
             it.pingpro.app.ping.ScanState(false, "192.168.1.1", "192.168.1.254", 254, 254, found, 0, 17000),
-            wifi, false, { a -> devices.firstOrNull { d -> d.address == a }?.name }, { _, _ -> }, {}, {}, {}, {}, {}, {})
+            wifi, false, { a -> devices.firstOrNull { d -> d.address == a }?.name }, { _, _ -> }, {}, {}, {}, {}, {}, {}, {})
     }
     @Test fun scan_running() = shot {
         it.pingpro.app.ui.screens.ScanScreen(
             it.pingpro.app.ping.ScanState(true, "192.168.1.1", "192.168.1.254", 254, 97, listOf(it.pingpro.app.ping.FoundDevice("192.168.1.1", 3.9, 64)), 0),
-            wifi, false, { null }, { _, _ -> }, {}, {}, {}, {}, {}, {})
+            wifi, false, { null }, { _, _ -> }, {}, {}, {}, {}, {}, {}, {})
     }
 
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }

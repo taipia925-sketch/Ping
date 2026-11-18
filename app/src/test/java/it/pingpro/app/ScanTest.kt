@@ -54,5 +54,13 @@ class ScanTest {
         println(rep)
         assertTrue(rep.contains("3 dispositivi hanno risposto su 254 indirizzi"))
         assertTrue(rep.contains("192.168.1.254"))
+        // «Pinga tutti»: tutti tranne il telefono; con una selezione, solo i selezionati
+        assertEquals(listOf("192.168.1.1", "192.168.1.254"), it.pingpro.app.ui.screens.pingTargets(listOf(ap, me, gw), emptySet()).map { d -> d.address })
+        assertEquals(listOf("192.168.1.254"), it.pingpro.app.ui.screens.pingTargets(listOf(ap, me, gw), setOf("192.168.1.254", "192.168.1.104")).map { d -> d.address })
+        // «Copia»: solo indirizzi IP, uno per riga, in ordine numerico (non alfabetico: .104 dopo .1 e prima di .254)
+        assertEquals("192.168.1.1\n192.168.1.104\n192.168.1.254", it.pingpro.app.ui.screens.ipList(listOf(gw, ap, me)))
+        // e si incollano puliti nell'elenco di Più schede
+        assertEquals(listOf("192.168.1.1", "192.168.1.104", "192.168.1.254"),
+            it.pingpro.app.ping.TargetParser.parse(it.pingpro.app.ui.screens.ipList(listOf(gw, ap, me))).addresses)
     }
 }
