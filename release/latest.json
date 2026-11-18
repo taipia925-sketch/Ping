@@ -1,8 +1,8 @@
 {
-  "versionCode": 8,
-  "versionName": "2.1.0",
-  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.1.0.apk",
-  "sha256": "1e5fa64410fa93bcbfb1563e8e73ffdc3478f2e37ced494808c15a40de755f21",
-  "sizeBytes": 1710182,
-  "notes": "Aggiornamenti automatici: l'app avvisa quando c'è una nuova versione e si aggiorna da sola, senza scaricare il file a mano. Messaggi più chiari nell'elenco di più schede."
+  "versionCode": 9,
+  "versionName": "2.2.0",
+  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.2.0.apk",
+  "sha256": "2beb1c59936dd62a2cdb938856bafeeb67f9d91225b5091f6f3b4c476c3882ac",
+  "sizeBytes": 1742946,
+  "notes": "Nuova funzione «Cerca dispositivi» (scheda Rete): trova in pochi secondi tutti i dispositivi che rispondono sulla rete, con il nome quando disponibile, e li aggiungi a Più schede con un tocco."
 }

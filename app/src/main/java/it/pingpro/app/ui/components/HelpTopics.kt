@@ -115,4 +115,11 @@ enum class HelpTopic(val title: String, val body: String) {
             "Puoi comporre l'elenco con le schede salvate, con un intervallo di indirizzi (es. da 192.168.1.100 a 192.168.1.120) o incollando un elenco, e salvarlo come gruppo con il nome dell'apparato.\n\n" +
             "Le schede che non rispondono vengono mostrate per prime e in rosso; tocca una scheda per vederne tutti i dettagli."
     ),
+    SCAN(
+        "Cerca dispositivi",
+        "Controlla una sola volta ogni indirizzo di un intervallo (di solito tutta la rete del telefono, da .1 a .254) e ti mostra quelli che rispondono, cioè dove c'è un dispositivo acceso.\n\n" +
+            "Per ogni dispositivo vedi il tempo di risposta e, se la rete lo fornisce, il suo nome. Il router/gateway e questo telefono sono evidenziati.\n\n" +
+            "Attenzione: un dispositivo che non compare non è per forza spento. Molti telefoni e PC con firewall non rispondono al ping.\n\n" +
+            "La ricerca dura al massimo qualche decina di secondi, non resta attiva e non viene salvata nello storico. Seleziona i dispositivi trovati per aggiungerli a \"Più schede\" o salvarli come schede."
+    ),
 }

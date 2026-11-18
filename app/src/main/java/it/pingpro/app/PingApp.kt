@@ -6,6 +6,7 @@ import it.pingpro.app.data.HistoryRepository
 import it.pingpro.app.data.SettingsRepository
 import it.pingpro.app.ping.NetworkInfoProvider
 import it.pingpro.app.ping.MultiPingController
+import it.pingpro.app.ping.NetworkScanner
 import it.pingpro.app.data.GroupRepository
 import it.pingpro.app.data.Updater
 import it.pingpro.app.ping.PingController
@@ -19,6 +20,7 @@ class PingApp : Application() {
     lateinit var multi: MultiPingController; private set
     lateinit var groups: GroupRepository; private set
     lateinit var updater: Updater; private set
+    lateinit var scanner: NetworkScanner; private set
 
     override fun onCreate() {
         super.onCreate()
@@ -30,5 +32,6 @@ class PingApp : Application() {
         multi = MultiPingController(this, history, devices, settings)
         groups = GroupRepository(this)
         updater = Updater(this)
+        scanner = NetworkScanner(this)
     }
 }

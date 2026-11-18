@@ -29,6 +29,8 @@ import androidx.compose.material.icons.outlined.NetworkPing
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material.icons.outlined.Terminal
+import androidx.compose.material.icons.outlined.TravelExplore
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.VpnLock
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.WifiOff
@@ -83,6 +85,7 @@ fun NetworkScreen(
     onUse: (String) -> Unit,
     onRefresh: () -> Unit,
     onCopy: (String) -> Unit,
+    onScan: () -> Unit = {},
 ) {
     var promptView by remember { mutableStateOf(false) }
     val lan = interfaces.firstOrNull { it.isLan && it.ipv4 != null }
@@ -122,6 +125,7 @@ fun NetworkScreen(
         } else {
             item { GatewayHero(lan, running, onPing, onUse) }
             item { DetailsCard(lan, running, onPing, onUse) }
+            item { ScanEntryCard(onScan) }
             if (lan.wifiRssi != null) item { SignalCard(lan) }
         }
         items(others) { i -> OtherInterfaceCard(i) }
@@ -178,6 +182,21 @@ private fun GatewayQuickRow(gw: String, running: Boolean, onPing: (String) -> Un
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Usa", color = Palette.AccentSoft, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+private fun ScanEntryCard(onScan: () -> Unit) {
+    AppCard(padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp), onClick = onScan) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconBadge(Icons.Outlined.TravelExplore, Palette.AccentSoft, size = 42.dp)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Cerca dispositivi", style = MaterialTheme.typography.titleSmall)
+                Text("Scopri quali indirizzi rispondono sulla rete", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
+            }
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Palette.TextDim)
         }
     }
 }

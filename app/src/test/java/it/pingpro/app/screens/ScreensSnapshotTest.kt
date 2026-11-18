@@ -204,6 +204,24 @@ class ScreensSnapshotTest {
         MultiEditScreen((1..100).map { MultiTarget("192.168.1.$it") }, null, devices, groupsList, wifi, { _, _ -> }, {}, {}, {}, {}, {})
     }
 
+    @Test fun scan_done() = pages(2) {
+        val found = listOf(
+            it.pingpro.app.ping.FoundDevice("192.168.1.1", 3.9, 64, name = "ripetitore.lan"),
+            it.pingpro.app.ping.FoundDevice("192.168.1.23", 0.2, 64, isPhone = true),
+            it.pingpro.app.ping.FoundDevice("192.168.1.100", 2.6, 64),
+            it.pingpro.app.ping.FoundDevice("192.168.1.101", 3.3, 255, name = "plc-linea3.lan"),
+            it.pingpro.app.ping.FoundDevice("192.168.1.254", 3.7, 64, isGateway = true),
+        )
+        it.pingpro.app.ui.screens.ScanScreen(
+            it.pingpro.app.ping.ScanState(false, "192.168.1.1", "192.168.1.254", 254, 254, found, 0, 17000),
+            wifi, false, { a -> devices.firstOrNull { d -> d.address == a }?.name }, { _, _ -> }, {}, {}, {}, {}, {}, {})
+    }
+    @Test fun scan_running() = shot {
+        it.pingpro.app.ui.screens.ScanScreen(
+            it.pingpro.app.ping.ScanState(true, "192.168.1.1", "192.168.1.254", 254, 97, listOf(it.pingpro.app.ping.FoundDevice("192.168.1.1", 3.9, 64)), 0),
+            wifi, false, { null }, { _, _ -> }, {}, {}, {}, {}, {}, {})
+    }
+
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }
     @Test fun devices() = shot { DevicesScreen(devices, hist, false, {}, {}, {}) }
     @Test fun guide() = pages(4) { GuideScreen({}, {}) }

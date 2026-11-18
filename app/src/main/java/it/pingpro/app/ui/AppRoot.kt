@@ -45,6 +45,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import it.pingpro.app.data.Export
+import it.pingpro.app.data.MultiTarget
 import it.pingpro.app.data.UpdateState
 import it.pingpro.app.ping.LinkStatus
 import it.pingpro.app.ping.PingMode
@@ -55,6 +56,7 @@ import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryDetailScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.ScanScreen
 import it.pingpro.app.ui.screens.UpdateDialog
 import it.pingpro.app.ui.screens.UpdateSettingsCard
 import it.pingpro.app.ui.screens.updateDialogVisible
@@ -94,6 +96,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     val multi by vm.multi.collectAsStateWithLifecycle()
     val groups by vm.groups.collectAsStateWithLifecycle()
     val updateState by vm.updateState.collectAsStateWithLifecycle()
+    val scan by vm.scan.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(Unit) { vm.updater.checkInBackground() }
     val context = LocalContext.current
     val toast: (String) -> Unit = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
@@ -223,6 +226,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                         onUse = { addr -> if (!vm.anyRunning) { vm.multiMode = false; vm.target = addr }; goTab("test") },
                         onRefresh = { vm.refreshNetwork(); toast("Configurazione aggiornata") },
                         onCopy = { txt -> Export.copy(context, "ipconfig", txt); toast("Configurazione copiata negli appunti") },
+                        onScan = { nav.navigate("scan") },
                     )
                 }
                 composable("devices") {
@@ -261,6 +265,36 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                         onDeleteGroup = { vm.deleteGroup(it.id) },
                         onBack = { nav.popBackStack() },
                         toast = toast,
+                        onScan = { nav.navigate("scan") },
+                    )
+                }
+                composable("scan") {
+                    val lanNow = network.firstOrNull { it.isLan && it.ipv4 != null }
+                    ScanScreen(
+                        state = scan, lan = lanNow, busy = session.running || multi.running,
+                        savedName = { a -> vm.deviceFor(a)?.name },
+                        onStart = { f, t -> vm.scanner.start(f, t, lanNow?.gateway, lanNow?.ipv4) },
+                        onStop = { vm.scanner.stop() },
+                        onPing = { addr -> vm.multiMode = false; startTest(); vm.pingNow(addr); goTab("test") },
+                        onAddToMulti = { list ->
+                            val before = vm.multiTargets.size
+                            vm.setMultiList(vm.multiTargets + list.map { d -> MultiTarget(d.address, vm.deviceFor(d.address)?.name ?: d.name) })
+                            val added = vm.multiTargets.size - before
+                            toast(if (added == 0) "Già tutti nell'elenco di Più schede" else "Aggiunti $added a Più schede")
+                            vm.multiMode = true; goTab("test")
+                        },
+                        onSave = { list ->
+                            var n = 0
+                            list.forEach { d ->
+                                if (vm.deviceFor(d.address) == null) {
+                                    vm.saveDevice(null, d.name ?: if (d.isGateway) "Router" else "Dispositivo ${d.address.substringAfterLast('.')}", d.address, "Trovato con Cerca dispositivi")
+                                    n++
+                                }
+                            }
+                            toast(if (n == 0) "Erano già tutti salvati" else "Salvate $n schede (rinominale in «Schede»)")
+                        },
+                        onCopy = { txt -> Export.copy(context, "Dispositivi", txt); toast("Elenco copiato negli appunti") },
+                        onBack = { nav.popBackStack() },
                     )
                 }
                 composable("lab") { LabScreen(onBack = { nav.popBackStack() }) }

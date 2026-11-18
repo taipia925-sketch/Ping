@@ -38,6 +38,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     val multi = pa.multi.state
     val groups = pa.groups.groups
     val updater = pa.updater
+    val scanner = pa.scanner
+    val scan = pa.scanner.state
     val updateState = pa.updater.state
     var dismissedUpdate by mutableStateOf(pa.updater.dismissedVersion)
 
@@ -49,7 +51,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
         private set
     var multiRunMode by mutableStateOf(PingMode.CONTINUOUS)
 
-    val anyRunning: Boolean get() = session.value.running || multi.value.running
+    val anyRunning: Boolean get() = session.value.running || multi.value.running || scan.value.running
 
     fun setMultiList(targets: List<MultiTarget>, name: String? = multiName) {
         multiTargets = targets.distinctBy { it.address.lowercase() }.take(TargetParser.MAX_TARGETS)
@@ -89,7 +91,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     }
 
     override fun start() {
-        if (!targetValid || multi.value.running) return
+        if (!targetValid || multi.value.running || scan.value.running) return
         pa.controller.start(buildConfig())
     }
 

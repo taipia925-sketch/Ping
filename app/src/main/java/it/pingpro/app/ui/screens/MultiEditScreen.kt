@@ -68,6 +68,7 @@ fun MultiEditScreen(
     onDeleteGroup: (TargetGroup) -> Unit,
     onBack: () -> Unit,
     toast: (String) -> Unit,
+    onScan: () -> Unit = {},
 ) {
     val prefix = lan?.ipv4?.substringBeforeLast('.')?.plus(".") ?: ""
     var from by remember { mutableStateOf(prefix) }
@@ -125,6 +126,13 @@ fun MultiEditScreen(
             }
         }
 
+        item {
+            AppCard(onClick = onScan, padding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
+                Text("Non sai quali indirizzi ci sono?", style = MaterialTheme.typography.titleSmall)
+                Text("Usa «Cerca dispositivi»: trova chi risponde sulla rete e lo aggiungi con un tocco.",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.AccentSoft)
+            }
+        }
         item {
             AppCard {
                 Text("Aggiungi un intervallo", style = MaterialTheme.typography.titleMedium)
