@@ -8,11 +8,13 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ![Rete / ipconfig](docs/screenshots/network.png)
 
+![Guida interattiva](docs/screenshots/guide.png)
+
 ---
 
 ## 1. Installazione sul Samsung Galaxy (S26 Ultra o altri)
 
-1. Scarica sul telefono il file **[`release/PingPro-1.1.0.apk`](release/PingPro-1.1.0.apk)**
+1. Scarica sul telefono il file **[`release/PingPro-1.2.0.apk`](release/PingPro-1.2.0.apk)**
    (da GitHub: apri il file → pulsante **Download raw file**).
 2. Apri il file scaricato (dalla notifica del download oppure da **Archivio › Download**).
 3. Alla prima installazione Android chiede di autorizzare la fonte:
@@ -56,6 +58,7 @@ ha un'icona **?** con una spiegazione breve.
 | Schede salvate | Nome personalizzato + IP + note, avvio test con un tocco, esito dell'ultimo test |
 | Storico | Ogni test salvato automaticamente, con grafico, eventi e tutti i pacchetti |
 | Confronto | Due test affiancati: grafico sovrapposto e valori con evidenziato il migliore |
+| **Guida interattiva** | Diagnosi guidata con test reali (rete del telefono → indirizzo → gateway → scheda → conclusione), tour sullo schermo vero, Laboratorio con scheda simulata (dichiarata come tale), quiz con 8 casi, animazione del viaggio del pacchetto, glossario e icone «?» ovunque |
 | Esportazione | Report testuale nello stesso formato del Prompt di Windows, oppure CSV per Excel |
 | Copia negli appunti | Report pronto da incollare in e-mail / chat |
 | Ripeti | Rilancia lo stesso test dallo storico o a fine test |
@@ -68,7 +71,7 @@ ha un'icona **?** con una spiegazione breve.
 - Pacchetto **ICMP Echo Request** (tipo 8) e risposta **Echo Reply** (tipo 0), come `ping.exe`.
 - **32 byte** di dati con lo stesso contenuto di Windows (`abcdefghijklmnopqrstuvwabcdefghi`).
 - **4 richieste** nel test singolo, **timeout 4000 ms**, **TTL in uscita 128**.
-- Circa **1 secondo** tra una richiesta e la successiva; dopo un timeout la richiesta successiva parte subito.
+- Circa **1 secondo** tra una richiesta e la successiva. Se una risposta non arriva, l'app attende fino al timeout (4 s) e poi invia la richiesta successiva.
 - Minimo/massimo/medio calcolati sulle sole risposte ricevute, perdita = persi/inviati.
 
 **Soluzione architetturale su Android**

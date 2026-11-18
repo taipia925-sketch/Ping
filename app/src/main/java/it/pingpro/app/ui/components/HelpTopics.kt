@@ -6,20 +6,20 @@ enum class HelpTopic(val title: String, val body: String) {
         "Indirizzo IP della scheda",
         "È il \"numero di telefono\" della scheda elettronica sulla rete, ad esempio 192.168.1.100.\n\n" +
             "Lo trovi sull'etichetta della scheda, nel suo manuale o nel software di configurazione. " +
-            "Puoi scrivere anche un nome di rete (es. scheda-01.local) se la rete lo supporta.\n\n" +
+            "Puoi scrivere anche un nome di rete (es. scheda01.azienda.it) se il DNS della rete lo conosce.\n\n" +
             "Il telefono deve essere collegato alla stessa rete Wi-Fi (o Ethernet) della scheda."
     ),
     MODE(
         "Test singolo o continuativo",
         "• Singolo: invia 4 richieste e si ferma, esattamente come il comando \"ping 192.168.1.100\" di Windows.\n\n" +
-            "• Continuativo: invia una richiesta al secondo finché non premi INTERROMPI, come \"ping -t 192.168.1.100\".\n\n" +
+            "• Continuativo: invia circa una richiesta al secondo finché non premi INTERROMPI, come \"ping -t 192.168.1.100\".\n\n" +
             "Il continuativo è utile per sorvegliare una scheda nel tempo, ad esempio mentre si muove un cavo o si riavvia un apparato."
     ),
     STATUS(
         "Stato della connessione",
         "• ONLINE (verde): la scheda risponde regolarmente.\n" +
             "• LENTA (giallo): risponde, ma l'ultimo tempo supera la soglia impostata (100 ms di default).\n" +
-            "• INSTABILE (giallo): almeno un pacchetto perso di recente.\n" +
+            "• INSTABILE (giallo): almeno un pacchetto perso negli ultimi 10.\n" +
             "• NON RISPONDE (rosso): 2 o più richieste consecutive senza risposta. Il telefono vibra per avvisarti.\n\n" +
             "Quando la scheda torna a rispondere viene registrato l'evento \"Connessione ripristinata\" con la durata dell'interruzione."
     ),
@@ -27,7 +27,7 @@ enum class HelpTopic(val title: String, val body: String) {
         "Latenza (tempo di risposta)",
         "È il tempo che passa tra l'invio della richiesta e l'arrivo della risposta della scheda: andata e ritorno.\n\n" +
             "Si misura in millisecondi (ms). Più è basso, meglio è.\n\n" +
-            "Su una rete locale valori tra 1 e 20 ms sono normali. Tramite Wi-Fi è normale qualche variazione."
+            "Dal telefono in Wi-Fi verso una scheda della rete locale sono tipici valori tra 1 e 20 ms, con qualche picco occasionale. Un PC collegato via cavo misura di solito meno di 1 ms."
     ),
     MILLISECONDS(
         "Cosa sono i millisecondi",
@@ -49,11 +49,11 @@ enum class HelpTopic(val title: String, val body: String) {
     LOST(
         "Pacchetti persi",
         "Richieste a cui la scheda non ha risposto entro il tempo massimo (4 secondi, come Windows). In Windows compaiono come \"Richiesta scaduta.\"\n\n" +
-            "Possibili cause: scheda spenta o bloccata, cavo scollegato, indirizzo IP errato, Wi-Fi debole, firewall che blocca il ping."
+            "Possibili cause: scheda spenta o bloccata, cavo scollegato, indirizzo IP errato, telefono su un'altra rete, Wi-Fi debole, oppure scheda configurata per non rispondere al ping."
     ),
     LOSS_PERCENT(
         "Percentuale di perdita",
-        "Persi ÷ inviati × 100.\n\n• 0% = perfetto.\n• 1–2% su test lunghi = accettabile su Wi-Fi.\n• Oltre 5% = problema da indagare.\n• 100% = la scheda non risponde affatto."
+        "Persi ÷ inviati × 100.\n\n• 0% = l'obiettivo su una rete locale.\n• Pochi pacchetti persi isolati in un test lungo via Wi-Fi: da tenere d'occhio, spesso dipendono dal Wi-Fi del telefono.\n• Perdite frequenti o pacchetti persi di fila: da indagare.\n• 100% = nessuna risposta dalla scheda."
     ),
     CHART(
         "Grafico della latenza",
@@ -77,26 +77,28 @@ enum class HelpTopic(val title: String, val body: String) {
     NETWORK(
         "Rete utilizzata",
         "Indica da quale collegamento del telefono partono le richieste (Wi-Fi o Ethernet) e l'indirizzo IP del telefono su quella rete.\n\n" +
-            "L'app sceglie automaticamente la rete che contiene l'indirizzo della scheda, anche se quel Wi-Fi non ha accesso a Internet, " +
-            "così le richieste non vengono mai inviate tramite i dati mobili."
+            "Verde: la scheda è nella stessa rete del telefono. Giallo: è fuori dalla rete del telefono (controlla indirizzo e Wi-Fi).\n\n" +
+            "Per gli indirizzi della rete locale l'app usa automaticamente il Wi-Fi/Ethernet, anche se quel Wi-Fi non ha accesso a Internet, " +
+            "invece dei dati mobili."
     ),
     GATEWAY(
         "Gateway predefinito",
-        "È l'indirizzo del router (o dell'apparato) attraverso cui passa il traffico della rete: lo stesso valore che leggi in \"Gateway predefinito\" con ipconfig su Windows.\n\n" +
-            "Fare il ping del gateway è il primo controllo: se risponde, il telefono è collegato correttamente alla rete. Se non risponde, il problema è nel collegamento Wi-Fi/rete, non nella scheda.\n\n" +
+        "È il dispositivo (di solito il router) a cui il telefono consegna i pacchetti diretti fuori dalla propria rete locale. È lo stesso valore che leggi in \"Gateway predefinito\" con ipconfig su Windows.\n\n" +
+            "Verso le schede della stessa rete il telefono comunica direttamente, senza passare dal gateway.\n\n" +
+            "Pingare il gateway è un ottimo primo controllo: se risponde, il collegamento del telefono alla rete funziona. Se non risponde, il problema è più probabilmente nel collegamento del telefono (oppure il gateway è configurato per non rispondere al ping).\n\n" +
             "Tocca \"Ping gateway\" per provarlo subito, oppure \"Usa\" per inserirlo come indirizzo da testare."
     ),
     PHONE_IP(
         "Indirizzo IPv4 del telefono",
-        "L'indirizzo che il telefono ha ricevuto su questa rete. Le schede che puoi raggiungere direttamente hanno di solito le prime tre parti uguali (es. telefono 192.168.1.23 → schede 192.168.1.x)."
+        "L'indirizzo che il telefono ha ricevuto su questa rete. Con la subnet mask più comune (255.255.255.0) le schede raggiungibili direttamente hanno le prime tre parti uguali (es. telefono 192.168.1.23 → schede 192.168.1.x)."
     ),
     SUBNET(
         "Subnet mask",
-        "Indica quanto è grande la rete locale. Con 255.255.255.0 (/24) la rete va da x.x.x.1 a x.x.x.254: tutte le schede con indirizzo in questo intervallo sono sulla stessa rete del telefono e si raggiungono direttamente."
+        "Indica quanto è grande la rete locale. Con 255.255.255.0 (detta anche /24) la rete comprende gli indirizzi con le prime tre parti uguali, da x.x.x.1 a x.x.x.254. Le schede con un indirizzo in questo intervallo sono nella stessa rete del telefono e si raggiungono direttamente. Con altre subnet mask l'intervallo cambia: l'app lo calcola e lo mostra in \"Indirizzi della rete\"."
     ),
     DNS(
         "Server DNS",
-        "Il servizio che traduce i nomi (es. scheda-01.local o www.sito.it) in indirizzi IP. Spesso coincide con il gateway."
+        "Il servizio che traduce i nomi (es. scheda01.azienda.it o www.sito.it) in indirizzi IP. Spesso coincide con il gateway."
     ),
     DHCP(
         "Server DHCP",
@@ -104,6 +106,6 @@ enum class HelpTopic(val title: String, val body: String) {
     ),
     SIGNAL(
         "Segnale Wi-Fi",
-        "Potenza del segnale ricevuto in dBm: più vicino a 0, migliore. Oltre -55 ottimo, fino a -67 buono, fino a -75 discreto, sotto -80 debole (possibili perdite e tempi alti)."
+        "Potenza del segnale ricevuto in dBm: più vicino a 0, migliore. Da 0 a -55 ottimo, fino a -67 buono, fino a -75 discreto, fino a -85 debole, sotto -85 molto debole. Con segnale debole aumentano tempi e pacchetti persi."
     ),
 }

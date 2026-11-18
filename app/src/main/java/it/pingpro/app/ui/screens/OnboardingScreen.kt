@@ -60,10 +60,10 @@ import kotlinx.coroutines.launch
 private data class Page(val title: String, val text: String, val art: @Composable () -> Unit)
 
 @Composable
-fun OnboardingScreen(onDone: () -> Unit) {
+fun OnboardingScreen(onDone: () -> Unit, onTour: (() -> Unit)? = null) {
     val pages = listOf(
         Page("Il PING di Windows,\nora sul telefono",
-            "Verifica in un attimo se una scheda elettronica comunica in rete. Stesse richieste ICMP del Prompt dei comandi, risultati reali misurati dal tuo telefono.") { PulseArt() },
+            "Verifica in un attimo se una scheda elettronica comunica in rete. Stesse richieste del comando ping di Windows, inviate davvero dal tuo telefono sulla rete Wi-Fi a cui è collegato.") { PulseArt() },
         Page("1. Scegli l'indirizzo",
             "Collega il telefono al Wi-Fi della scheda. Il gateway predefinito (come in ipconfig) è già pronto con un tocco; oppure scrivi l'IP della scheda e salvalo con un nome.") { AddressArt() },
         Page("2. Singolo o continuo",
@@ -71,7 +71,7 @@ fun OnboardingScreen(onDone: () -> Unit) {
         Page("3. Capisci tutto a colpo d'occhio",
             "Verde: la scheda risponde. Giallo: rallentamenti o perdite. Rosso: non risponde, e il telefono vibra per avvisarti.") { StatusArt() },
         Page("Aiuto sempre a portata di mano",
-            "Tocca le icone ? per una spiegazione semplice di ogni valore. Nella sezione Guida trovi esempi pratici e la soluzione ai problemi più comuni.") { HelpArt() },
+            "Tocca le icone ? per una spiegazione semplice di ogni valore. Nella Guida trovi il Laboratorio per fare pratica, un quiz e la Diagnosi guidata quando una scheda non risponde.") { HelpArt() },
     )
     val pager = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
@@ -106,6 +106,11 @@ fun OnboardingScreen(onDone: () -> Unit) {
             contentAlignment = Alignment.Center,
         ) {
             Text(if (last) "INIZIA" else "AVANTI", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp, letterSpacing = 1.2.sp)
+        }
+        if (last && onTour != null) {
+            TextButton(onClick = onTour, modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp)) {
+                Text("Fammi vedere i pulsanti con un tour guidato", color = Palette.AccentSoft)
+            }
         }
     }
 }

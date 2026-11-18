@@ -3,10 +3,13 @@ package it.pingpro.app.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,16 +24,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.CompareArrows
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Build
-import androidx.compose.material.icons.automirrored.outlined.CompareArrows
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Quiz
 import androidx.compose.material.icons.outlined.School
+import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.TravelExplore
 import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +60,7 @@ import it.pingpro.app.ui.components.AppCard
 import it.pingpro.app.ui.components.HelpSheet
 import it.pingpro.app.ui.components.HelpTopic
 import it.pingpro.app.ui.components.IconBadge
+import it.pingpro.app.ui.components.LatencyAnimation
 import it.pingpro.app.ui.components.Pill
 import it.pingpro.app.ui.components.Sparkline
 import it.pingpro.app.ui.theme.Mono
@@ -61,29 +68,37 @@ import it.pingpro.app.ui.theme.Palette
 
 private data class Example(val title: String, val verdict: String, val color: Color, val values: List<Double?>, val text: String)
 
+/** Esempi realistici misurati da un telefono collegato in Wi-Fi. */
 private val examples = listOf(
-    Example("Scheda collegata via cavo", "NORMALE", Palette.Green,
-        listOf(0.6, 0.7, 0.5, 0.6, 0.8, 0.6, 0.5, 0.7, 0.6, 0.6, 0.7, 0.5, 0.6, 0.6, 0.7, 0.6, 0.5, 0.6),
-        "Tempi bassissimi (sotto 1–2 ms), tutti simili tra loro, 0% persi. Situazione ideale."),
-    Example("Scheda raggiunta tramite Wi-Fi", "NORMALE", Palette.Green,
-        listOf(3.0, 4.2, 2.8, 6.1, 3.5, 3.1, 8.0, 3.3, 4.0, 2.9, 5.2, 3.4, 3.0, 4.8, 3.2, 3.6, 2.7, 4.1),
-        "Tempi tra 2 e 15 ms con piccole oscillazioni: è il comportamento tipico del Wi-Fi del telefono. 0% persi."),
-    Example("Segnale Wi-Fi debole o disturbato", "ANOMALO", Palette.Amber,
+    Example("Scheda che funziona, telefono vicino all'access point", "NORMALE", Palette.Green,
+        listOf(3.0, 2.6, 4.1, 2.9, 3.4, 2.8, 5.2, 3.1, 2.7, 3.3, 3.0, 4.4, 2.9, 3.2, 2.8, 3.6, 3.0, 2.9),
+        "Tempi di pochi millisecondi, simili tra loro, 0% persi. È il risultato tipico di una scheda raggiunta da un telefono in Wi-Fi."),
+    Example("Scheda che funziona, con qualche picco isolato", "NORMALE", Palette.Green,
+        listOf(3.1, 2.8, 3.3, 2.9, 96.0, 3.0, 3.2, 2.7, 3.4, 3.0, 2.9, 3.1, 3.3, 71.0, 2.8, 3.0, 3.2, 2.9),
+        "Tempi bassi con rari picchi e nessuna perdita. Il Wi-Fi del telefono ogni tanto rallenta per un istante: se i picchi sono rari non è un guasto."),
+    Example("Segnale Wi-Fi debole o disturbato", "DA VERIFICARE", Palette.Amber,
         listOf(5.0, 38.0, 12.0, null, 80.0, 9.0, 140.0, 22.0, 7.0, null, 60.0, 15.0, 95.0, 11.0, 30.0, 8.0, 120.0, 14.0),
-        "Tempi molto irregolari (jitter alto), picchi oltre 100 ms e qualche pacchetto perso. Avvicinarsi all'access point o verificare interferenze."),
-    Example("Cavo scollegato / interruzione", "ANOMALO", Palette.Red,
-        listOf(1.0, 1.1, 0.9, 1.0, null, null, null, null, null, null, 1.2, 1.0, 0.9, 1.1, 1.0, 0.9, 1.0, 1.1),
-        "La scheda risponde, poi una serie di pacchetti persi consecutivi (zona rossa), poi torna a rispondere. L'app segnala \"Interruzione\" e \"Connessione ripristinata\" con la durata."),
-    Example("Scheda spenta o IP sbagliato", "GUASTO", Palette.Red,
+        "Tempi molto irregolari (jitter alto), picchi frequenti e qualche pacchetto perso. Avvicinati all'access point e ripeti: se migliora, la causa era il Wi-Fi."),
+    Example("Interruzione temporanea", "ANOMALO", Palette.Red,
+        listOf(3.0, 3.1, 2.9, 3.0, null, null, null, null, null, null, 3.2, 3.0, 2.9, 3.1, 3.0, 2.9, 3.0, 3.1),
+        "La scheda risponde, poi diversi pacchetti persi di fila (zona rossa), poi torna a rispondere. Tipico di falso contatto, riavvio della scheda o di un apparato di rete. L'app registra inizio e durata nella Cronologia eventi."),
+    Example("Nessuna risposta", "NON RAGGIUNGIBILE", Palette.Red,
         listOf(null, null, null, null, null, null, null, null, null, null, null, null),
-        "Nessuna risposta: 100% persi (\"Richiesta scaduta.\"). Verificare alimentazione, cavo, indirizzo IP e che telefono e scheda siano sulla stessa rete."),
-    Example("Scheda sovraccarica", "DA VERIFICARE", Palette.Amber,
-        listOf(1.0, 1.2, 1.1, 45.0, 1.0, 1.3, 1.1, 1.0, 60.0, 1.2, 1.1, 1.0, 1.2, 52.0, 1.1, 1.0, 1.2, 1.1),
-        "Tempi normalmente bassi ma con picchi isolati regolari: la scheda a volte è troppo impegnata per rispondere subito. Nessuna perdita."),
+        "100% persi («Richiesta scaduta.»). Non significa per forza scheda guasta: può essere spenta o scollegata, l'indirizzo può essere sbagliato, il telefono può essere su un'altra rete, o la scheda può non rispondere al ping per configurazione. Usa la Diagnosi guidata."),
+    Example("Rallentamenti regolari solo verso la scheda", "DA VERIFICARE", Palette.Amber,
+        listOf(3.0, 3.2, 3.1, 45.0, 3.0, 3.3, 3.1, 3.0, 60.0, 3.2, 3.1, 3.0, 3.2, 52.0, 3.1, 3.0, 3.2, 3.1),
+        "Picchi ripetuti senza perdite. Confronta con un test verso il gateway: se il gateway non mostra picchi, è più probabile che sia la scheda a rispondere in ritardo quando è impegnata; se li mostra anche il gateway, la causa è il Wi-Fi."),
 )
 
 @Composable
-fun GuideScreen(onStartTutorial: () -> Unit, onTryNow: () -> Unit) {
+fun GuideScreen(
+    onStartTutorial: () -> Unit,
+    onTryNow: () -> Unit,
+    onStartTour: () -> Unit = {},
+    onOpenLab: () -> Unit = {},
+    onOpenQuiz: () -> Unit = {},
+    onOpenDiagnosis: () -> Unit = {},
+) {
     var help by remember { mutableStateOf<HelpTopic?>(null) }
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -93,72 +108,78 @@ fun GuideScreen(onStartTutorial: () -> Unit, onTryNow: () -> Unit) {
         item {
             Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp)) {
                 Text("Guida", style = MaterialTheme.typography.headlineLarge)
-                Text("Tutto quello che serve sapere, in parole semplici", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
+                Text("Impara facendo: prova, sbaglia, capisci", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
             }
         }
+
+        // ---- Strumenti interattivi ----
         item {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF1B3A73), Color(0xFF0F1E3D))))
-                    .clickable(onClick = onStartTutorial).padding(20.dp),
+                    .background(Brush.linearGradient(listOf(Color(0xFF5A1B2B), Color(0xFF2A0F17))))
+                    .border(1.dp, Palette.Red.copy(alpha = 0.3f), RoundedCornerShape(26.dp))
+                    .clickable(onClick = onOpenDiagnosis).padding(20.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("Tutorial introduttivo", style = MaterialTheme.typography.titleLarge, color = Color.White)
+                        Text("La scheda non risponde?", style = MaterialTheme.typography.titleLarge, color = Color.White)
                         Spacer(Modifier.height(4.dp))
-                        Text("5 schermate per imparare a usare l'app in un minuto", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.75f))
+                        Text("Diagnosi guidata passo passo, con test reali: ti dice dove cercare il problema.",
+                            style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                     }
-                    Icon(Icons.Outlined.PlayCircle, null, tint = Color.White, modifier = Modifier.size(44.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Icon(Icons.Outlined.TravelExplore, null, tint = Color.White, modifier = Modifier.size(40.dp))
+                }
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ToolCard(Icons.Outlined.PlayCircle, "Tutorial", "Le basi in 5 schermate", Palette.Accent, Modifier.weight(1f), onStartTutorial)
+                    ToolCard(Icons.Outlined.TouchApp, "Tour dell'app", "Ti mostro ogni pulsante sullo schermo vero", Palette.Teal, Modifier.weight(1f), onStartTour)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ToolCard(Icons.Outlined.Science, "Laboratorio", "Scheda simulata: stacca il cavo e guarda cosa succede", Palette.Violet, Modifier.weight(1f), onOpenLab)
+                    ToolCard(Icons.Outlined.Quiz, "Quiz", "8 casi reali da interpretare", Palette.Amber, Modifier.weight(1f), onOpenQuiz)
                 }
             }
         }
 
+        // ---- Contenuti ----
+        item { SectionLabel("Capire il ping") }
         item {
-            GuideSection(Icons.Outlined.TouchApp, "Come eseguire un PING, passo dopo passo", Palette.Accent, initiallyOpen = true) {
-                Step(1, "Collega il telefono alla rete della scheda", "Apri le impostazioni Wi-Fi del Samsung e collegati alla stessa rete a cui è collegata la scheda (anche se quella rete non ha Internet).")
-                Step(2, "Scegli l'indirizzo", "Tocca il pulsante \"Gateway …\" per usare il gateway predefinito (come lo trovi con ipconfig), scegli una scheda salvata, oppure scrivi l'IP, ad esempio 192.168.1.100. Con l'icona segnalibro lo salvi con un nome.")
-                Step(3, "Scegli la modalità", "Singolo = 4 richieste e stop (come \"ping 192.168.1.100\"). Continuo = va avanti finché non premi Interrompi (come \"ping -t 192.168.1.100\").")
-                Step(4, "Premi AVVIA TEST", "Ogni secondo parte una richiesta. Lo stato in alto diventa verde se la scheda risponde, rosso se non risponde.")
-                Step(5, "Leggi il risultato", "Guarda Latenza media e Perdita. 0% persi e pochi millisecondi = comunicazione perfetta.")
-                Step(6, "Interrompi o salva", "Premi INTERROMPI quando vuoi. Il test viene salvato automaticamente nello Storico, da dove puoi copiarlo, esportarlo o ripeterlo.")
+            GuideSection(Icons.Outlined.School, "Come funziona il ping", Palette.Teal, initiallyOpen = true) {
+                Para("L'idea", "Il ping è come chiedere alla scheda «ci sei?» e aspettare che risponda «sì». Il telefono invia un piccolo pacchetto (una richiesta ICMP Echo) e la scheda lo rimanda indietro (una risposta Echo Reply). Se la risposta arriva, telefono e scheda comunicano.")
                 Spacer(Modifier.height(4.dp))
-                Text("Prova ora →", style = MaterialTheme.typography.labelLarge, color = Palette.AccentSoft,
-                    modifier = Modifier.clip(CircleShape).clickable(onClick = onTryNow).padding(horizontal = 12.dp, vertical = 8.dp))
+                LatencyAnimation()
+                Spacer(Modifier.height(8.dp))
+                Para("La latenza", "È il tempo di andata e ritorno: dall'invio della richiesta all'arrivo della risposta. Si misura in millisecondi (ms): 1 ms è un millesimo di secondo, 1000 ms fanno 1 secondo.")
+                Para("I pacchetti persi", "Se la risposta non arriva entro 4 secondi (il «timeout», lo stesso di Windows) la richiesta è considerata persa: in Windows compare «Richiesta scaduta.». Per questo, quando la scheda non risponde, le righe arrivano ogni 4 secondi invece che ogni secondo.")
+                Para("Il jitter", "Quanto cambiano i tempi da una risposta all'altra. Basso = collegamento regolare. Alto = tempi irregolari, tipico di un Wi-Fi disturbato.")
+                Para("Il primo pacchetto", "A volte la prima risposta è un po' più lenta delle altre: il telefono deve prima «trovare» la scheda sulla rete. È normale, succede anche con Windows.")
+                TopicChips(listOf(HelpTopic.MILLISECONDS, HelpTopic.LOST, HelpTopic.JITTER)) { help = it }
             }
         }
-
         item {
-            GuideSection(Icons.Outlined.Lan, "Trovare il gateway e gli indirizzi (ipconfig)", Palette.Teal) {
-                Para("Dove si trova", "Tocca la scheda Rete nella barra in basso (oppure il pulsante \"ipconfig\" accanto all'indirizzo nella schermata Test). Vedi gli stessi dati del comando ipconfig di Windows: indirizzo IPv4 del telefono, subnet mask e gateway predefinito, più DNS, server DHCP e segnale Wi-Fi.")
-                Para("Ping del gateway con un tocco", "Il gateway predefinito è in evidenza: premi PING GATEWAY per avviare subito il test, senza scrivere nulla. Nella schermata Test il gateway compare anche come scelta rapida (pulsante verde \"Gateway …\").")
-                Para("Perché è utile", "Se il gateway risponde, il telefono è collegato bene alla rete. Se il gateway risponde ma la scheda no, il problema è nella scheda o nel suo cavo. Se non risponde nemmeno il gateway, il problema è nel Wi-Fi o nella rete.")
-                Para("Vista Prompt", "Mostra i dati esattamente come la finestra nera di Windows (ipconfig e ipconfig /all) e permette di copiarli.")
-                Para("Indirizzi della rete", "Indica l'intervallo di indirizzi della rete del telefono (es. 192.168.1.1 – 192.168.1.254): le schede con un indirizzo in questo intervallo si raggiungono direttamente.")
+            GuideSection(Icons.Outlined.Lan, "Gateway, subnet e ipconfig", Palette.Accent) {
+                Para("Dove trovarli", "Nella scheda Rete (o con il pulsante «ipconfig» nella schermata Test) vedi gli stessi dati del comando ipconfig di Windows: indirizzo IPv4 del telefono, subnet mask e gateway predefinito, più DNS, server DHCP e segnale Wi-Fi.")
+                NetDiagram()
+                Para("Il gateway predefinito", "È il dispositivo, di solito il router, a cui il telefono consegna i pacchetti diretti fuori dalla propria rete locale (verso Internet o verso altre reti). Verso le schede della stessa rete, invece, il telefono comunica direttamente: quei pacchetti non passano dal gateway.")
+                Para("Perché pingare il gateway", "È il primo controllo da fare. Se il gateway risponde, il collegamento del telefono alla rete funziona. Se poi una scheda della stessa rete non risponde, il problema va cercato dalla parte della scheda (alimentazione, cavo, indirizzo, configurazione). Se non risponde nemmeno il gateway, il problema è più probabilmente nel collegamento del telefono. Attenzione: alcuni gateway sono configurati per non rispondere al ping.")
+                Para("La subnet mask", "Dice quanto è grande la rete locale. Con la più comune, 255.255.255.0, la rete comprende gli indirizzi che hanno le prime tre parti uguali: ad esempio da 192.168.1.1 a 192.168.1.254. L'app calcola l'intervallo per te e lo mostra come «Indirizzi della rete».")
+                Para("Stessa rete o no?", "Se l'indirizzo della scheda è dentro l'intervallo della rete del telefono, il telefono la raggiunge direttamente. Se è fuori, serve il gateway e una rete configurata per far passare il traffico: spesso un indirizzo «fuori rete» è semplicemente scritto male. La Diagnosi guidata fa questo controllo in automatico.")
+                TopicChips(listOf(HelpTopic.GATEWAY, HelpTopic.SUBNET, HelpTopic.DHCP)) { help = it }
             }
         }
-
-        item {
-            GuideSection(Icons.Outlined.School, "Concetti base", Palette.Teal) {
-                Para("Cos'è il PING", "È come chiedere alla scheda \"ci sei?\" e aspettare che risponda \"sì\". Il telefono invia un piccolo pacchetto (richiesta ICMP Echo) e la scheda lo rimanda indietro (risposta Echo Reply). Se la risposta arriva, la comunicazione funziona.")
-                Para("Cosa sono i millisecondi (ms)", "1 millisecondo è un millesimo di secondo. 1000 ms = 1 secondo. Se leggi \"5 ms\", la risposta è arrivata in 5 millesimi di secondo: velocissimo.")
-                Para("Cos'è la latenza", "È il tempo di andata e ritorno del pacchetto. Su una rete locale: sotto 1–2 ms via cavo, 2–20 ms via Wi-Fi. Oltre 100 ms su rete locale è anomalo.")
-                Para("Cosa sono i pacchetti persi", "Richieste a cui la scheda non ha risposto entro 4 secondi. Nessuna perdita è l'obiettivo. Perdite occasionali indicano disturbi; perdite consecutive indicano un'interruzione.")
-                Para("Cos'è il jitter", "Quanto variano i tempi da un pacchetto all'altro. Basso = rete stabile. Alto = rete irregolare (tipico di Wi-Fi debole).")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    listOf(HelpTopic.MILLISECONDS, HelpTopic.LOST, HelpTopic.TTL).forEach { t ->
-                        Text(t.title, style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
-                            modifier = Modifier.clip(CircleShape).background(Palette.Surface2).clickable { help = t }.padding(horizontal = 10.dp, vertical = 6.dp))
-                    }
-                }
-            }
-        }
-
         item {
             GuideSection(Icons.Outlined.Insights, "Esempi: risultati normali e anomali", Palette.Violet) {
+                Text("Valori tipici misurati da un telefono in Wi-Fi. Per vederli dal vivo apri il Laboratorio.",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 examples.forEach { ex ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(ex.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                            Spacer(Modifier.width(8.dp))
                             Pill(ex.verdict, ex.color)
                         }
                         Spacer(Modifier.height(10.dp))
@@ -169,72 +190,145 @@ fun GuideScreen(onStartTutorial: () -> Unit, onTryNow: () -> Unit) {
                 }
             }
         }
-
         item {
-            GuideSection(Icons.Outlined.Widgets, "Spiegazione di ogni funzione", Palette.Amber) {
-                Para("Schermata Test", "Indirizzo, modalità, pulsante AVVIA/INTERROMPI, stato della connessione, latenza attuale, statistiche, grafico, mappa pacchetti, elenco risposte e cronologia eventi. Ogni riquadro ha un'icona ? con la spiegazione.")
-                Para("Stato colorato", "Verde = risponde. Giallo = lenta o instabile. Rosso = non risponde (2 richieste consecutive senza risposta): il telefono vibra.")
-                Para("Grafico", "Linea della latenza, linea tratteggiata della media, barre rosse per i pacchetti persi, zone rosse per le interruzioni. Puoi vedere gli ultimi 60 pacchetti o tutto il test.")
-                Para("Mappa pacchetti", "Gli ultimi 40 pacchetti come quadratini colorati: individui i problemi in un secondo.")
-                Para("Schede", "Salva gli indirizzi con un nome (es. \"Quadro linea 3\") e avvia il test con un tocco. Vedi l'esito dell'ultimo test di ogni scheda.")
-                Para("Storico", "Ogni test viene salvato. Toccalo per i dettagli; tieni premuto (o usa l'icona ⇄) per selezionarne due e confrontarli.")
-                Para("Esporta e copia", "\"Copia\" mette negli appunti un report nello stesso formato del Prompt di Windows. \"Testo\" e \"CSV\" permettono di inviare i risultati via e-mail, WhatsApp, Drive, ecc. Il CSV si apre con Excel.")
-                Para("Ripeti", "Riavvia lo stesso test con gli stessi parametri, dalla dashboard o dallo storico.")
-                Para("Notifica", "Durante il test una notifica mostra lo stato in tempo reale: il test continua anche con lo schermo spento. Dalla notifica puoi interromperlo.")
-                Para("Impostazioni", "Parametri avanzati equivalenti alle opzioni di Windows (-n, -l, -w, -i), soglia di latenza elevata, vibrazione e suono di allarme.")
+            GuideSection(Icons.Outlined.Lightbulb, "Valori di riferimento", Palette.Green) {
+                Text("Indicazioni orientative per un telefono collegato in Wi-Fi a una rete locale. Ogni impianto è diverso: il confronto più utile è con i test precedenti della stessa scheda (Storico › Confronta).",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 6.dp))
+                RefRow("Latenza tipica", "1 – 20 ms", Palette.Green)
+                RefRow("Picchi rari fino a ~100 ms", "normali in Wi-Fi", Palette.Green)
+                RefRow("Latenza sempre sopra 50 ms", "da verificare", Palette.Amber)
+                RefRow("Perdita", "0% è l'obiettivo", Palette.Green)
+                RefRow("Pochi persi isolati in un test lungo", "tenere d'occhio", Palette.Amber)
+                RefRow("Persi consecutivi o perdite frequenti", "da indagare", Palette.Red)
+                RefRow("100% persi", "nessuna risposta", Palette.Red)
+                Text("Per confronto: un PC collegato via cavo alla stessa rete misura di solito meno di 1 ms («durata<1ms» in Windows). Il telefono misura qualche millisecondo in più perché passa dal Wi-Fi.",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, modifier = Modifier.padding(top = 6.dp))
             }
         }
 
+        item { SectionLabel("Usare l'app") }
+        item {
+            GuideSection(Icons.Outlined.TouchApp, "Eseguire un ping, passo dopo passo", Palette.Accent) {
+                Step(1, "Collega il telefono alla rete della scheda", "Impostazioni › Connessioni › Wi-Fi, e scegli la rete a cui è collegata la scheda. Va bene anche se quella rete non ha Internet: l'app invia comunque i test sulla rete giusta.")
+                Step(2, "Scegli l'indirizzo", "Tocca «Gateway …» per usare il gateway predefinito senza scriverlo, scegli una scheda salvata, oppure scrivi l'IP (es. 192.168.1.100).")
+                Step(3, "Scegli la modalità", "Singolo: 4 richieste e stop, come «ping 192.168.1.100». Continuo: va avanti finché non premi Interrompi, come «ping -t 192.168.1.100».")
+                Step(4, "Premi AVVIA TEST", "Parte circa una richiesta al secondo. Lo stato diventa verde se la scheda risponde, giallo se ci sono rallentamenti o perdite, rosso se non risponde.")
+                Step(5, "Leggi il risultato", "Guarda Perdita e Latenza media. 0% persi e pochi millisecondi: la comunicazione funziona.")
+                Step(6, "Interrompi, salva, condividi", "Premi INTERROMPI quando vuoi. Il test è salvato nello Storico: puoi copiarlo, esportarlo, ripeterlo o confrontarlo.")
+                Spacer(Modifier.height(4.dp))
+                Text("Prova ora →", style = MaterialTheme.typography.labelLarge, color = Palette.AccentSoft,
+                    modifier = Modifier.clip(CircleShape).clickable(onClick = onTryNow).padding(horizontal = 12.dp, vertical = 8.dp))
+            }
+        }
+        item {
+            GuideSection(Icons.Outlined.Widgets, "Tutte le funzioni", Palette.Amber) {
+                Para("Test", "Indirizzo, modalità, AVVIA/INTERROMPI e, durante il test: stato, latenza, statistiche, grafico, mappa pacchetti, elenco risposte e cronologia eventi. Il «Tour dell'app» li mostra uno per uno.")
+                Para("Stato colorato", "Verde: risponde. Giallo «Lenta»: l'ultima risposta supera la soglia (100 ms, modificabile). Giallo «Instabile»: almeno un pacchetto perso negli ultimi 10. Rosso «Non risponde»: 2 o più richieste di fila senza risposta; il telefono vibra (e suona, se attivato).")
+                Para("Grafico", "Linea della latenza, linea tratteggiata della media, barre rosse per i pacchetti persi e zone rosse per le interruzioni. Puoi vedere gli ultimi 60 pacchetti o tutto il test.")
+                Para("Mappa pacchetti", "Gli ultimi 40 pacchetti come quadratini colorati: verde/azzurro risposte veloci, giallo/arancio lente, rosso perse.")
+                Para("Rete (ipconfig)", "Configurazione IP del telefono con gateway in evidenza e pulsante PING GATEWAY. La «Vista Prompt» la mostra come nella finestra di Windows e permette di copiarla.")
+                Para("Schede", "Indirizzi salvati con un nome (es. «Quadro linea 3») e note. Il test parte con un tocco e vedi l'esito dell'ultimo controllo.")
+                Para("Storico e confronto", "Ogni test è salvato automaticamente. Tocca un test per i dettagli; tieni premuto (o usa ⇄) per sceglierne due e confrontarli.")
+                Para("Esporta e copia", "«Copia» mette negli appunti un report nello stesso formato del Prompt di Windows. «Testo» e «CSV» lo inviano via e-mail, chat o Drive; il CSV si apre con Excel.")
+                Para("In background", "Durante il test una notifica mostra lo stato: il test continua anche a schermo spento e si può interrompere dalla notifica.")
+                Para("Impostazioni", "Parametri equivalenti alle opzioni di Windows (-n numero richieste, -l dimensione, -w timeout, -i TTL), con i valori di Windows già impostati; soglia di latenza, vibrazione, suono, schermo acceso.")
+            }
+        }
         item {
             GuideSection(Icons.AutoMirrored.Outlined.CompareArrows, "Differenze rispetto al Prompt di Windows", Palette.AccentSoft) {
-                Text("Stesso principio, stessi pacchetti:", style = MaterialTheme.typography.titleSmall)
-                Spacer(Modifier.height(6.dp))
                 Text(
-                    "C:\\> ping 192.168.1.100\n\nEsecuzione di Ping 192.168.1.100 con 32 byte di dati:\nRisposta da 192.168.1.100: byte=32 durata=1ms TTL=64",
+                    "C:\\> ping 192.168.1.100\n\nEsecuzione di Ping 192.168.1.100 con 32 byte di dati:\nRisposta da 192.168.1.100: byte=32 durata=3ms TTL=64",
                     fontFamily = Mono, fontSize = 12.sp, color = Palette.TextDim,
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF0C0C0C)).padding(12.dp),
                 )
                 Spacer(Modifier.height(10.dp))
-                Bullet("Identici a Windows: richiesta ICMP Echo, 32 byte di dati con lo stesso contenuto, 4 richieste nel test singolo, timeout di 4 secondi, circa 1 secondo tra le richieste, TTL in uscita 128, calcolo di minimo/massimo/medio/persi.")
-                Bullet("Più preciso: Windows arrotonda al millisecondo (\"durata<1ms\"); qui vedi anche i decimali (es. 0,42 ms).")
-                Bullet("Più chiaro: Windows a volte conta come \"ricevuto\" anche il messaggio \"Host di destinazione non raggiungibile\"; qui è sempre conteggiato come perso, perché la scheda non ha risposto.")
-                Bullet("Il tempo misurato include anche il Wi-Fi del telefono: rispetto a un PC collegato via cavo è normale vedere qualche millisecondo in più. L'app disattiva il risparmio energetico del Wi-Fi durante il test per ridurre questo effetto.")
-                Bullet("Android non permette alle app i socket \"raw\" usati da Windows: l'app usa i socket ICMP dedicati al ping messi a disposizione dal sistema. Il pacchetto che viaggia in rete è lo stesso.")
-                Bullet("Se il Wi-Fi della scheda non ha Internet, Android potrebbe preferire i dati mobili: l'app invia comunque le richieste sulla rete che contiene la scheda.")
-            }
-        }
-
-        item {
-            GuideSection(Icons.Outlined.Build, "La scheda non risponde? Cosa controllare", Palette.Red) {
-                Bullet("Il telefono è collegato al Wi-Fi giusto? Nel riquadro stato, la voce di rete deve essere verde (stessa rete della scheda). Se è gialla, il telefono è su un'altra rete.")
-                Bullet("L'indirizzo è corretto? Le prime tre parti dell'IP di telefono e scheda di solito coincidono (es. 192.168.1.x).")
-                Bullet("La scheda è accesa e il cavo di rete è collegato (LED della porta accesi)?")
-                Bullet("Alcune reti Wi-Fi \"ospiti\" isolano i dispositivi tra loro (isolamento client): in quel caso il ping non può passare.")
-                Bullet("Alcuni dispositivi hanno il ping (ICMP) disabilitato dal firewall: in questo caso non rispondono anche se funzionano.")
-                Bullet("Disattiva temporaneamente VPN o \"Passa a dati mobili\" se il test continua a non partire.")
-            }
-        }
-
-        item {
-            GuideSection(Icons.Outlined.Lightbulb, "Valori di riferimento", Palette.Green) {
-                RefRow("Latenza via cavo", "< 2 ms", Palette.Green)
-                RefRow("Latenza via Wi-Fi", "2 – 20 ms", Palette.Green)
-                RefRow("Latenza da verificare", "20 – 100 ms", Palette.Amber)
-                RefRow("Latenza anomala (rete locale)", "> 100 ms", Palette.Red)
-                RefRow("Perdita accettabile", "0%", Palette.Green)
-                RefRow("Perdita da indagare", "> 1–2%", Palette.Amber)
-                RefRow("Scheda non raggiungibile", "100%", Palette.Red)
+                Bullet("Uguale: stesso tipo di pacchetto (ICMP Echo), 32 byte di dati con lo stesso contenuto, 4 richieste nel test singolo, attesa massima di 4 secondi per ogni risposta, TTL in uscita 128, stesso modo di calcolare minimo, massimo, medio e persi.")
+                Bullet("Più preciso: Windows mostra millisecondi interi («durata<1ms» sotto il millisecondo); l'app mostra anche i decimali (es. 0,42 ms). Il report esportato riporta entrambe le forme.")
+                Bullet("Tempi un po' più alti: dal telefono il pacchetto passa dal Wi-Fi, quindi è normale misurare qualche millisecondo in più di un PC collegato via cavo. Durante il test l'app disattiva il risparmio energetico del Wi-Fi per misure più stabili.")
+                Bullet("«Host di destinazione non raggiungibile»: in quel caso Windows può contare il pacchetto come ricevuto (la risposta però arriva dal PC o da un router, non dalla scheda). L'app lo conta sempre come perso.")
+                Bullet("Funzionamento interno: Android non permette alle app di costruire pacchetti «grezzi» come fa Windows; l'app usa il canale ICMP che Android mette a disposizione proprio per il ping. In rete viaggia lo stesso pacchetto.")
+                Bullet("Rete giusta: se il Wi-Fi delle schede non ha Internet, Android potrebbe preferire i dati mobili; per gli indirizzi della rete locale l'app invia comunque i test sul Wi-Fi/Ethernet.")
             }
         }
         item {
-            Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Outlined.MenuBook, null, tint = Palette.TextFaint, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Tocca le icone ? nell'app per spiegazioni rapide", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+            GuideSection(Icons.Outlined.Build, "La scheda non risponde: cosa controllare", Palette.Red) {
+                Bullet("Usa la Diagnosi guidata: fa i controlli in ordine e ti dice dove guardare.")
+                Bullet("Il telefono è sul Wi-Fi giusto? Nel riquadro di stato la rete è verde se la scheda è nella stessa rete del telefono, gialla se non lo è.")
+                Bullet("L'indirizzo è corretto? Confrontalo con l'intervallo «Indirizzi della rete» nella scheda Rete.")
+                Bullet("La scheda è accesa e i LED della porta di rete sono attivi? Il cavo e la porta dello switch sono a posto?")
+                Bullet("Le reti Wi-Fi «ospiti» spesso impediscono di comunicare con gli altri dispositivi: collegati alla rete aziendale/tecnica.")
+                Bullet("Alcuni apparecchi sono configurati per non rispondere al ping: in quel caso il ping fallisce anche se l'apparecchio funziona.")
+                Bullet("Se hai una VPN attiva sul telefono, disattivala temporaneamente.")
+            }
+        }
+        item {
+            GuideSection(Icons.AutoMirrored.Outlined.MenuBook, "Glossario", Palette.TextDim) {
+                Text("Tocca una parola per la spiegazione.", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
+                Spacer(Modifier.height(8.dp))
+                TopicChips(HelpTopic.entries.sortedBy { it.title }) { help = it }
             }
         }
     }
     help?.let { HelpSheet(it) { help = null } }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(text.uppercase(), style = MaterialTheme.typography.labelLarge, color = Palette.TextFaint, modifier = Modifier.padding(start = 6.dp, top = 10.dp))
+}
+
+@Composable
+private fun ToolCard(icon: ImageVector, title: String, text: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier.height(150.dp).clip(RoundedCornerShape(24.dp)).background(Palette.Surface)
+            .border(1.dp, color.copy(alpha = 0.25f), RoundedCornerShape(24.dp)).clickable(onClick = onClick).padding(16.dp)
+    ) {
+        IconBadge(icon, color, size = 42.dp)
+        Spacer(Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        Text(text, style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, maxLines = 2)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TopicChips(topics: List<HelpTopic>, onClick: (HelpTopic) -> Unit) {
+    FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        topics.forEach { t -> TopicChip(t) { onClick(t) } }
+    }
+}
+
+@Composable
+private fun TopicChip(t: HelpTopic, onClick: () -> Unit) {
+    Text(t.title, style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
+        modifier = Modifier.clip(CircleShape).background(Palette.Surface2).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp))
+}
+
+/** Schema semplice: scheda e telefono nella stessa rete, il gateway porta verso le altre reti. */
+@Composable
+private fun NetDiagram() {
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(14.dp)) {
+        Text("RETE LOCALE  192.168.1.1 – 192.168.1.254", style = MaterialTheme.typography.labelSmall, color = Palette.Teal)
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            DiagramNode("Telefono", "192.168.1.23")
+            Text("⇄ diretto ⇄", style = MaterialTheme.typography.bodySmall, color = Palette.Green, modifier = Modifier.align(Alignment.CenterVertically))
+            DiagramNode("Scheda", "192.168.1.100")
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            DiagramNode("Gateway", "192.168.1.1")
+            Text("  →  altre reti / Internet", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
+        }
+    }
+}
+
+@Composable
+private fun DiagramNode(name: String, ip: String) {
+    Column(Modifier.clip(RoundedCornerShape(12.dp)).background(Palette.Surface3).padding(horizontal = 10.dp, vertical = 6.dp)) {
+        Text(name, style = MaterialTheme.typography.labelMedium)
+        Text(ip, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = Palette.TextDim)
+    }
 }
 
 @Composable
@@ -292,7 +386,7 @@ private fun RefRow(label: String, value: String, color: Color) {
         Box(Modifier.size(8.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(10.dp))
         Text(label, style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim, modifier = Modifier.weight(1f))
+        Spacer(Modifier.width(8.dp))
         Text(value, style = MaterialTheme.typography.titleSmall, color = color)
     }
 }
-

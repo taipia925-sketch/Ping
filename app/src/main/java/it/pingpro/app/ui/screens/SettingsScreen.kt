@@ -84,7 +84,7 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
             AppCard {
                 Text("Aiuto", style = MaterialTheme.typography.titleMedium)
                 TextButton(onClick = onTutorial) { Text("Rivedi il tutorial iniziale") }
-                Text("PingPro 1.1 · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+                Text("PingPro 1.2 · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
             }
         }
     }

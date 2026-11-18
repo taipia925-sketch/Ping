@@ -33,6 +33,14 @@ import it.pingpro.app.ui.TestUi
 import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.QuizScreen
+import it.pingpro.app.ui.screens.DiagnosisScreen
+import it.pingpro.app.ui.screens.LabContent
+import it.pingpro.app.ui.screens.LabScenario
+import it.pingpro.app.ui.components.LocalTour
+import it.pingpro.app.ui.components.TourController
+import it.pingpro.app.ui.components.TourOverlay
+import androidx.compose.runtime.CompositionLocalProvider
 import it.pingpro.app.ui.screens.NetworkScreen
 import it.pingpro.app.ping.NetInterfaceInfo
 import it.pingpro.app.ui.screens.OnboardingScreen
@@ -124,9 +132,29 @@ class ScreensSnapshotTest {
     @Test fun network() = pages(2) { NetworkScreen(listOf(wifi, cell), false, {}, {}, {}, {}) }
     @Test fun network_none() = shot { NetworkScreen(listOf(cell), false, {}, {}, {}, {}) }
 
+    @Test fun guide_tools() = pages(2) { GuideScreen({}, {}) }
+    @Test fun quiz() = shot { QuizScreen {} }
+    @Test fun diagnosis() = pages(2) { DiagnosisScreen(wifi, SessionState(), "192.168.2.50", { true }, {}, {}, {}, {}) }
+    @Test fun lab() = pages(2) {
+        val st = session(40, setOf(30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40))
+        LabContent(st, LabScenario.DROPOUTS, true, false, AppSettings(), {}, {}, {}, {}, {})
+    }
+    @Test fun tour() = shot {
+        val tour = TourController()
+        CompositionLocalProvider(LocalTour provides tour) {
+            Box(Modifier.fillMaxSize()) {
+                TestScreen(FakeUi("192.168.1.100", PingMode.SINGLE, devices), SessionState(), devices, emptyList(), AppSettings(), {}, {}, {}, {}, lan = wifi)
+                tour.bounds["mode"] = androidx.compose.ui.geometry.Rect(64f, 1130f, 1376f, 1290f)
+                tour.steps = listOf(it.pingpro.app.ui.testScreenTour[0], it.pingpro.app.ui.testScreenTour[5], it.pingpro.app.ui.testScreenTour[6])
+                tour.index = 1; tour.active = true
+                TourOverlay(tour)
+            }
+        }
+    }
+
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }
     @Test fun devices() = shot { DevicesScreen(devices, hist, false, {}, {}, {}) }
-    @Test fun guide() = pages(3) { GuideScreen({}, {}) }
-    @Test fun onboarding() = shot { OnboardingScreen {} }
+    @Test fun guide() = pages(4) { GuideScreen({}, {}) }
+    @Test fun onboarding() = shot { OnboardingScreen(onDone = {}) }
     @Test fun settings() = shot { SettingsScreen(AppSettings(), {}, {}, {}) }
 }

@@ -114,6 +114,7 @@ import it.pingpro.app.ui.components.Pill
 import it.pingpro.app.ui.components.SectionHeader
 import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.components.StatTile
+import it.pingpro.app.ui.components.tourTarget
 import it.pingpro.app.ui.theme.Mono
 import it.pingpro.app.ui.theme.Palette
 import it.pingpro.app.ui.theme.latencyColor
@@ -217,7 +218,7 @@ private fun TargetCard(
     AppCard {
         SectionHeader("Indirizzo della scheda", help = HelpTopic.ADDRESS) {
             Row(
-                Modifier.clip(CircleShape).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 6.dp),
+                Modifier.tourTarget("ipconfig").clip(CircleShape).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.Lan, null, tint = Palette.AccentSoft, modifier = Modifier.size(15.dp))
@@ -230,6 +231,7 @@ private fun TargetCard(
         Row(
             Modifier
                 .fillMaxWidth()
+                .tourTarget("address")
                 .clip(RoundedCornerShape(20.dp))
                 .background(Palette.Surface2)
                 .border(1.dp, borderColor, RoundedCornerShape(20.dp))
@@ -257,7 +259,7 @@ private fun TargetCard(
             if (vm.target.isNotEmpty() && !running) {
                 IconButton(onClick = { vm.target = "" }) { Icon(Icons.Outlined.Close, "Cancella", tint = Palette.TextDim) }
             }
-            IconButton(onClick = { if (vm.targetValid) onSaveDevice(vm.target) }, enabled = vm.targetValid) {
+            IconButton(onClick = { if (vm.targetValid) onSaveDevice(vm.target) }, enabled = vm.targetValid, modifier = Modifier.tourTarget("save")) {
                 Icon(if (saved != null) Icons.Outlined.Bookmark else Icons.Outlined.BookmarkAdd,
                     if (saved != null) "Scheda salvata" else "Salva scheda",
                     tint = if (saved != null) Palette.Teal else if (vm.targetValid) Palette.TextDim else Palette.TextFaint)
@@ -287,7 +289,7 @@ private fun TargetCard(
         val gateway = lan?.gateway
         if (chips.isNotEmpty() || gateway != null) {
             Spacer(Modifier.height(12.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(Modifier.tourTarget("chips"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (gateway != null) item(key = "gw") {
                     val sel = gateway == vm.target
                     Row(
@@ -331,6 +333,7 @@ private fun TargetCard(
         }
         Spacer(Modifier.height(6.dp))
         SegmentedToggle(
+            modifier = Modifier.tourTarget("mode"),
             options = listOf("Singolo · $count", "Continuo · -t"),
             selected = if (vm.mode == PingMode.SINGLE) 0 else 1,
             onSelect = { vm.mode = if (it == 0) PingMode.SINGLE else PingMode.CONTINUOUS },
@@ -340,7 +343,7 @@ private fun TargetCard(
         Text(
             "C:\\> " + vm.buildConfig().windowsCommand(),
             fontFamily = Mono, fontSize = 13.sp, color = Palette.TextFaint, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 4.dp),
+            modifier = Modifier.padding(start = 4.dp).tourTarget("command"),
         )
     }
 }
@@ -358,6 +361,7 @@ private fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?
     Box(
         Modifier
             .fillMaxWidth()
+            .tourTarget("start")
             .height(68.dp)
             .scale(scale)
             .clip(RoundedCornerShape(24.dp))
@@ -418,7 +422,7 @@ private fun finishedColor(s: SessionState): Color = when {
 }
 
 @Composable
-private fun StatusHero(s: SessionState, settings: AppSettings) {
+fun StatusHero(s: SessionState, settings: AppSettings) {
     val color by animateColorAsState(finishedColor(s), tween(400), label = "hero")
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(s.running) {
@@ -532,7 +536,7 @@ private fun StatusOrb(color: Color, active: Boolean, icon: ImageVector) {
 }
 
 @Composable
-private fun StatsGrid(s: SessionState, settings: AppSettings) {
+fun StatsGrid(s: SessionState, settings: AppSettings) {
     val st = s.stats
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -557,7 +561,7 @@ private fun StatsGrid(s: SessionState, settings: AppSettings) {
 }
 
 @Composable
-private fun ChartCard(s: SessionState) {
+fun ChartCard(s: SessionState) {
     var all by remember { mutableStateOf(false) }
     AppCard {
         SectionHeader("Andamento latenza", help = HelpTopic.CHART) {
@@ -601,7 +605,7 @@ private fun Legend(color: Color, label: String, dashed: Boolean = false) {
 }
 
 @Composable
-private fun StripCard(s: SessionState, settings: AppSettings) {
+fun StripCard(s: SessionState, settings: AppSettings) {
     AppCard {
         SectionHeader("Mappa pacchetti", help = HelpTopic.STRIP) {
             Text("ultimi 40", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
@@ -612,7 +616,7 @@ private fun StripCard(s: SessionState, settings: AppSettings) {
 }
 
 @Composable
-private fun PacketsCard(s: SessionState, settings: AppSettings) {
+fun PacketsCard(s: SessionState, settings: AppSettings) {
     var expanded by remember { mutableStateOf(false) }
     val list = s.samples.asReversed()
     val shown = if (expanded) list.take(500) else list.take(8)
@@ -737,7 +741,7 @@ private fun IdleHint() {
             "1" to "Collega il telefono al Wi-Fi della scheda.",
             "2" to "Tocca \"Gateway\" per usare il gateway predefinito, oppure scrivi l'IP della scheda (es. 192.168.1.100).",
             "3" to "Scegli Singolo (4 richieste) o Continuo (fino a quando premi Interrompi).",
-            "4" to "Premi AVVIA TEST e guarda i risultati in tempo reale.",
+            "4" to "Premi AVVIA TEST e guarda i risultati in tempo reale. Hai dubbi? Apri la Guida: c'è anche la Diagnosi guidata.",
         ).forEach { (n, t) ->
             Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(26.dp).clip(CircleShape).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {

@@ -40,6 +40,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import it.pingpro.app.data.Export
 import it.pingpro.app.ping.LinkStatus
+import it.pingpro.app.ping.PingMode
 import it.pingpro.app.ui.screens.CompareScreen
 import it.pingpro.app.ui.screens.DeviceDraft
 import it.pingpro.app.ui.screens.DeviceEditorDialog
@@ -47,6 +48,13 @@ import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryDetailScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.LabScreen
+import it.pingpro.app.ui.screens.QuizScreen
+import it.pingpro.app.ui.screens.DiagnosisScreen
+import it.pingpro.app.ui.components.LocalTour
+import it.pingpro.app.ui.components.TourController
+import it.pingpro.app.ui.components.TourOverlay
+import it.pingpro.app.ui.components.tourTarget
 import it.pingpro.app.ui.screens.NetworkScreen
 import it.pingpro.app.ui.screens.OnboardingScreen
 import it.pingpro.app.ui.screens.SettingsScreen
@@ -78,11 +86,21 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     var draft by remember { mutableStateOf<DeviceDraft?>(null) }
     var deleting by remember { mutableStateOf<it.pingpro.app.data.SavedDevice?>(null) }
 
+    val tour = remember { TourController() }
+    var pendingTour by remember { mutableStateOf(false) }
+
     if (showTutorial) {
-        OnboardingScreen(onDone = {
-            vm.updateSettings { it.copy(onboardingDone = true) }
-            showTutorial = false
-        })
+        OnboardingScreen(
+            onDone = {
+                vm.updateSettings { it.copy(onboardingDone = true) }
+                showTutorial = false
+            },
+            onTour = {
+                vm.updateSettings { it.copy(onboardingDone = true) }
+                showTutorial = false
+                pendingTour = true
+            },
+        )
         return
     }
 
@@ -98,11 +116,24 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     }
     val startTest: () -> Unit = { onFirstTestStarting() }
 
+    // Il tour parte quando la schermata Test è visibile e i suoi elementi sono stati misurati.
+    androidx.compose.runtime.LaunchedEffect(pendingTour, currentRoute) {
+        if (pendingTour && currentRoute == "test") {
+            kotlinx.coroutines.delay(450)
+            tour.start(testScreenTour)
+            pendingTour = false
+        }
+    }
+    fun startTour() { pendingTour = true; goTab("test") }
+
+    androidx.compose.runtime.CompositionLocalProvider(LocalTour provides tour) {
+    Box(Modifier.fillMaxSize()) {
+
     Scaffold(
         containerColor = Palette.Bg,
         bottomBar = {
             if (tabs.any { it.route == currentRoute }) {
-                NavigationBar(containerColor = Palette.Surface, tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
+                NavigationBar(modifier = Modifier.tourTarget("nav"), containerColor = Palette.Surface, tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
                     tabs.forEach { t ->
                         NavigationBarItem(
                             selected = currentRoute == t.route,
@@ -174,7 +205,33 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                     )
                 }
                 composable("guide") {
-                    GuideScreen(onStartTutorial = { showTutorial = true }, onTryNow = { goTab("test") })
+                    GuideScreen(
+                        onStartTutorial = { showTutorial = true },
+                        onTryNow = { goTab("test") },
+                        onStartTour = { startTour() },
+                        onOpenLab = { nav.navigate("lab") },
+                        onOpenQuiz = { nav.navigate("quiz") },
+                        onOpenDiagnosis = { nav.navigate("diagnosis") },
+                    )
+                }
+                composable("lab") { LabScreen(onBack = { nav.popBackStack() }) }
+                composable("quiz") { QuizScreen(onBack = { nav.popBackStack() }) }
+                composable("diagnosis") {
+                    DiagnosisScreen(
+                        lan = network.firstOrNull { it.isLan && it.ipv4 != null },
+                        session = session,
+                        initialAddress = vm.target,
+                        runCheck = { addr -> startTest(); vm.runCheck(addr) },
+                        onRefreshNetwork = { vm.refreshNetwork() },
+                        onContinuous = { addr ->
+                            if (session.running) toast("C'è già un test in corso") else {
+                                vm.target = addr; vm.mode = PingMode.CONTINUOUS
+                                startTest(); vm.start(); goTab("test")
+                            }
+                        },
+                        onBack = { nav.popBackStack() },
+                        toast = toast,
+                    )
                 }
                 composable("record/{id}") { e ->
                     HistoryDetailScreen(vm, e.arguments?.getString("id") ?: "", onBack = { nav.popBackStack() },
@@ -190,6 +247,9 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                 }
             }
         }
+    }
+    TourOverlay(tour)
+    }
     }
 
     draft?.let { d ->

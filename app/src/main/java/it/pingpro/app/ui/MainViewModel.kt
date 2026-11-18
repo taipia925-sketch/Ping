@@ -59,6 +59,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
         pa.controller.start(buildConfig())
     }
 
+    /** Controllo rapido per la diagnosi: test singolo di 4 richieste con i parametri di Windows. */
+    fun runCheck(address: String): Boolean {
+        if (session.value.running) return false
+        pa.controller.start(PingConfig(address.trim(), PingMode.SINGLE))
+        return true
+    }
+
     override fun stop() = pa.controller.stop()
 
     fun repeat(s: TestSummary) {
