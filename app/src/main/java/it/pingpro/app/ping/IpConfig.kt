@@ -56,6 +56,9 @@ object IpConfig {
         return (x and maskBits(prefix)) == (y and maskBits(prefix))
     }
 
+    fun isLinkLocalV6(a: String): Boolean = a.lowercase().startsWith("fe8") || a.lowercase().startsWith("fe9") ||
+        a.lowercase().startsWith("fea") || a.lowercase().startsWith("feb")
+
     fun signalLabel(rssi: Int): String = when {
         rssi >= -55 -> "Ottimo"
         rssi >= -67 -> "Buono"
@@ -82,7 +85,11 @@ object IpConfig {
             appendLine()
             appendLine("   Suffisso DNS specifico per connessione: ${i.domain ?: ""}")
             if (all && i.interfaceName != null) appendLine("   Interfaccia . . . . . . . . . . . . . : ${i.interfaceName}")
-            i.ipv6.forEach { appendLine("   Indirizzo IPv6 locale rispetto al collegamento . : $it") }
+            // Come Windows: "locale rispetto al collegamento" solo per gli indirizzi fe80::, gli altri sono "Indirizzo IPv6".
+            i.ipv6.sortedBy { isLinkLocalV6(it) }.forEach {
+                if (isLinkLocalV6(it)) appendLine("   Indirizzo IPv6 locale rispetto al collegamento . : $it")
+                else appendLine("   Indirizzo IPv6. . . . . . . . . . . . : $it")
+            }
             appendLine("   Indirizzo IPv4. . . . . . . . . . . . : ${i.ipv4 ?: "-"}")
             appendLine("   Subnet mask . . . . . . . . . . . . . : ${i.subnetMask ?: "-"}")
             appendLine("   Gateway predefinito . . . . . . . . . : ${i.gateway ?: ""}")

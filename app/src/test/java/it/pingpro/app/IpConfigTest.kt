@@ -33,5 +33,10 @@ class IpConfigTest {
         assertTrue(t.contains("   Subnet mask . . . . . . . . . . . . . : 255.255.255.0"))
         assertTrue(t.contains("   Gateway predefinito . . . . . . . . . : 192.168.1.1"))
         assertTrue(IpConfig.windowsText(listOf(i), all = true).contains("Server DHCP"))
+        // Caso reale: rete mobile con IPv6 pubblico → "Indirizzo IPv6", non "locale rispetto al collegamento".
+        val cell = NetInterfaceInfo("Dati mobili", "rmnet", false, true, null, null, "fe80::b", ipv6 = listOf("2001:b04:a8:e412::364:4772"))
+        val tc = IpConfig.windowsText(listOf(cell))
+        assertTrue(tc.contains("   Indirizzo IPv6. . . . . . . . . . . . : 2001:b04:a8:e412::364:4772"))
+        assertTrue(!tc.contains("locale rispetto al collegamento . : 2001"))
     }
 }

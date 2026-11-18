@@ -217,7 +217,8 @@ private fun DetailsCard(i: NetInterfaceInfo, running: Boolean, onPing: (String) 
         i.dns.forEachIndexed { k, d -> InfoRow(if (k == 0) "Server DNS" else "", d, if (k == 0) HelpTopic.DNS else null, pingable = true, running = running, onPing = onPing, onUse = onUse) }
         i.dhcpServer?.let { InfoRow("Server DHCP", it, HelpTopic.DHCP, pingable = true, running = running, onPing = onPing, onUse = onUse) }
         i.frequencyMHz?.let { InfoRow("Banda", if (it >= 5900) "6 GHz" else if (it >= 4900) "5 GHz" else "2,4 GHz") }
-        i.ipv6.firstOrNull()?.let { InfoRow("IPv6 locale", it) }
+        i.ipv6.firstOrNull { !IpConfig.isLinkLocalV6(it) }?.let { InfoRow("Indirizzo IPv6", it) }
+        i.ipv6.firstOrNull { IpConfig.isLinkLocalV6(it) }?.let { InfoRow("IPv6 locale (collegamento)", it) }
         i.mtu?.let { InfoRow("MTU", it.toString()) }
         i.domain?.takeIf { it.isNotBlank() }?.let { InfoRow("Suffisso DNS", it) }
     }
