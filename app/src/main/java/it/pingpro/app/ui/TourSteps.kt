@@ -8,7 +8,7 @@ val testScreenTour = listOf(
     TourStep("multi", "Una scheda o più schede", "Con «Più schede» controlli molte schede contemporaneamente, ad esempio tutte quelle di un apparato: ognuna ha il proprio ping, come più finestre del Prompt aperte insieme."),
     TourStep("address", "Indirizzo da controllare", "Qui va l'indirizzo IP della scheda, ad esempio 192.168.1.100. È quello che in Windows scriveresti dopo la parola «ping»."),
     TourStep("chips", "Scelte rapide", "Il pulsante verde «Gateway» inserisce il gateway predefinito senza doverlo scrivere. Seguono le schede salvate e gli indirizzi usati di recente: un tocco e l'indirizzo è pronto."),
-    TourStep("ipconfig", "ipconfig", "Apre la scheda Rete: indirizzo del telefono, subnet mask e gateway predefinito, come il comando ipconfig di Windows."),
+    TourStep("ipconfig", "ipconfig e Cerca", "«ipconfig» apre la scheda Rete: indirizzo del telefono, subnet mask e gateway predefinito, come il comando di Windows. «Cerca» trova in pochi secondi tutti i dispositivi che rispondono sulla rete, se non conosci l'indirizzo della scheda."),
     TourStep("save", "Salva la scheda", "Dà un nome all'indirizzo (es. «Quadro linea 3»), così lo ritrovi nella sezione Schede e tra le scelte rapide."),
     TourStep("mode", "Singolo o continuo", "Singolo: 4 richieste e poi si ferma, come «ping». Continuo: va avanti finché non premi Interrompi, come «ping -t». Usa il continuo per sorvegliare una scheda nel tempo."),
     TourStep("command", "Comando equivalente", "Il comando che scriveresti nel Prompt di Windows per fare lo stesso test. È solo un riferimento: non devi scriverlo."),

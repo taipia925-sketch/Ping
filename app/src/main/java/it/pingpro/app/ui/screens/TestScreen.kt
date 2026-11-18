@@ -54,6 +54,7 @@ import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Router
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.Wifi
@@ -142,6 +143,7 @@ fun TestScreen(
     onOpenNetwork: () -> Unit = {},
     onSwitchMulti: (() -> Unit)? = null,
     multiRunning: Boolean = false,
+    onOpenScan: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val hasSession = session.status != LinkStatus.IDLE
@@ -189,7 +191,7 @@ fun TestScreen(
             item { PacketsCard(session, settings) }
             item { EventsCard(session.events) }
         } else {
-            item { TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice, lan, onOpenNetwork) }
+            item { TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice, lan, onOpenNetwork, onOpenScan) }
             item { button() }
             if (hasSession) {
                 item { StatusHero(session, settings) }
@@ -232,17 +234,28 @@ private fun TargetCard(
     onSaveDevice: (String) -> Unit,
     lan: NetInterfaceInfo?,
     onOpenNetwork: () -> Unit,
+    onOpenScan: () -> Unit,
 ) {
     val focus = LocalFocusManager.current
     val saved = vm.deviceFor(vm.target)
     val invalid = vm.target.isNotBlank() && !vm.targetValid
     AppCard {
-        SectionHeader("Indirizzo della scheda", help = HelpTopic.ADDRESS) {
+        SectionHeader("Indirizzo della scheda", help = HelpTopic.ADDRESS)
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
-                Modifier.tourTarget("ipconfig").clip(CircleShape).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 6.dp),
+                Modifier.clip(CircleShape).background(Palette.AccentBg).clickable(onClick = onOpenScan).padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Outlined.Lan, null, tint = Palette.AccentSoft, modifier = Modifier.size(15.dp))
+                Icon(Icons.Outlined.Search, null, tint = Palette.AccentSoft, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Cerca dispositivi", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft)
+            }
+            Row(
+                Modifier.tourTarget("ipconfig").clip(CircleShape).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Outlined.Lan, null, tint = Palette.AccentSoft, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("ipconfig", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft)
             }

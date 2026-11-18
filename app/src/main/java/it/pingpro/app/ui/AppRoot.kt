@@ -212,6 +212,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                         onOpenNetwork = { goTab("network") },
                         onSwitchMulti = { vm.multiMode = true },
                         multiRunning = multi.running,
+                        onOpenScan = { nav.navigate("scan") },
                     )
                     }
                 }

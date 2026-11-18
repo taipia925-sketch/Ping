@@ -124,9 +124,9 @@ fun NetworkScreen(
             }
         } else {
             item { GatewayHero(lan, running, onPing, onUse) }
-            item { DetailsCard(lan, running, onPing, onUse) }
             item { ScanEntryCard(onScan) }
             if (lan.wifiRssi != null) item { SignalCard(lan) }
+            item { DetailsCard(lan, running, onPing, onUse) }
         }
         items(others) { i -> OtherInterfaceCard(i) }
         item {
@@ -188,7 +188,7 @@ private fun GatewayQuickRow(gw: String, running: Boolean, onPing: (String) -> Un
 
 @Composable
 private fun ScanEntryCard(onScan: () -> Unit) {
-    AppCard(padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp), onClick = onScan) {
+    AppCard(padding = PaddingValues(horizontal = 18.dp, vertical = 16.dp), onClick = onScan, borderColor = Palette.Accent.copy(alpha = 0.35f)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconBadge(Icons.Outlined.TravelExplore, Palette.AccentSoft, size = 42.dp)
             Spacer(Modifier.width(14.dp))

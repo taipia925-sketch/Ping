@@ -1,8 +1,8 @@
 {
-  "versionCode": 9,
-  "versionName": "2.2.0",
-  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.2.0.apk",
-  "sha256": "2beb1c59936dd62a2cdb938856bafeeb67f9d91225b5091f6f3b4c476c3882ac",
-  "sizeBytes": 1742946,
-  "notes": "Nuova funzione «Cerca dispositivi» (scheda Rete): trova in pochi secondi tutti i dispositivi che rispondono sulla rete, con il nome quando disponibile, e li aggiungi a Più schede con un tocco."
+  "versionCode": 10,
+  "versionName": "2.2.1",
+  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.2.1.apk",
+  "sha256": "12de5584704e43fcc1b3d19711da5ca5719e1c8e61512f6cb024aab822687343",
+  "sizeBytes": 1742950,
+  "notes": "«Cerca dispositivi» ora è più facile da trovare: pulsante nella schermata Test (sotto «Indirizzo della scheda») e riquadro subito sotto il gateway nella scheda Rete."
 }
