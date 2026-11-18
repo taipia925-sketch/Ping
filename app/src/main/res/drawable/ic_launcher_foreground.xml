@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Onde concentriche (segnale) -->
+    <path android:fillColor="#00000000" android:strokeColor="#333D8BFF" android:strokeWidth="2.5"
+        android:pathData="M54,30 a24,24 0 1,1 -0.01,0 z" />
+    <path android:fillColor="#00000000" android:strokeColor="#803D8BFF" android:strokeWidth="2.5"
+        android:pathData="M54,38 a16,16 0 1,1 -0.01,0 z" />
+    <!-- Linea di latenza -->
+    <path android:fillColor="#00000000" android:strokeColor="#FF4FE3C1" android:strokeWidth="4"
+        android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M30,56 L42,56 L47,46 L54,66 L60,50 L64,56 L78,56" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M78,56 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0" />
+</vector>
