@@ -96,7 +96,14 @@ fun MultiEditScreen(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        item { BackHeader("Schede da controllare", "Fino a ${TargetParser.MAX_TARGETS} schede insieme", onBack) }
+        item { BackHeader("Schede da controllare", "Fino a ${TargetParser.MAX_TARGETS} schede insieme · ora ${targets.size}", onBack) }
+        if (room == 0) item {
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.AmberBg).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("L'elenco è pieno (${TargetParser.MAX_TARGETS} schede). Per aggiungerne altre togli qualche scheda o premi «Svuota» in fondo.",
+                    style = MaterialTheme.typography.titleSmall, color = Palette.Amber, modifier = Modifier.weight(1f))
+                TextButton(onClick = { onChange(emptyList(), null) }) { Text("Svuota", color = Palette.Red) }
+            }
+        }
 
         if (groups.isNotEmpty()) item {
             AppCard {
@@ -130,22 +137,27 @@ fun MultiEditScreen(
                         shape = RoundedCornerShape(16.dp), colors = colors, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 }
                 val size = TargetParser.rangeSize(from, to)
+                val incomplete = from.endsWith(".") || to.endsWith(".")
+                val rangePreview = remember(from, to, targets) {
+                    if (size == null || size > 1000) null
+                    else TargetParser.previewAdd(TargetParser.expandRange(from, to, 1000) ?: emptyList(), targets.map { it.address })
+                }
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         when {
-                            size == null && (from.endsWith(".") || to.endsWith(".")) -> "Completa i due indirizzi, ad esempio da ${prefix.ifEmpty { "192.168.1." }}100 a ${prefix.ifEmpty { "192.168.1." }}120."
+                            size == null && incomplete -> "Completa i due indirizzi, ad esempio da ${prefix.ifEmpty { "192.168.1." }}100 a ${prefix.ifEmpty { "192.168.1." }}120."
                             size == null -> "Scrivi due indirizzi validi, il secondo uguale o maggiore del primo."
-                            size > room -> "$size indirizzi: troppi (spazio disponibile: $room)"
-                            else -> "$size indirizzi"
+                            size > 1000 -> "Intervallo troppo grande ($size indirizzi): al massimo ${TargetParser.MAX_TARGETS} schede insieme."
+                            else -> rangePreview?.message ?: ""
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = if ((size != null && size <= room) || (size == null && (from.endsWith(".") || to.endsWith(".")))) Palette.TextDim else Palette.Amber,
+                        color = if ((size == null && incomplete) || rangePreview?.warning == false) Palette.TextDim else Palette.Amber,
                         modifier = Modifier.weight(1f),
                     )
                     TextButton(onClick = {
-                        TargetParser.expandRange(from, to)?.let { r -> add(r.map { MultiTarget(it, devices.firstOrNull { d -> d.address == it }?.name) }) }
-                    }, enabled = size != null && size in 1..room.toLong()) { Text("Aggiungi") }
+                        rangePreview?.let { p -> add(p.newAddresses.map { a -> MultiTarget(a, devices.firstOrNull { d -> d.address == a }?.name) }) }
+                    }, enabled = rangePreview?.canAdd == true) { Text("Aggiungi") }
                 }
             }
         }
@@ -181,22 +193,26 @@ fun MultiEditScreen(
                 OutlinedTextField(pasted, { pasted = it }, placeholder = { Text("192.168.1.100\n192.168.1.105\n192.168.1.110-115") },
                     modifier = Modifier.fillMaxWidth().height(130.dp), shape = RoundedCornerShape(16.dp), colors = colors,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
-                val parsed = remember(pasted, room) { TargetParser.parse(pasted, room.coerceAtLeast(0)) }
-                Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        buildString {
-                            append("${parsed.addresses.size} indirizzi validi")
-                            if (parsed.invalid.isNotEmpty()) append(" · non validi: ${parsed.invalid.take(3).joinToString(", ")}${if (parsed.invalid.size > 3) "…" else ""}")
-                            if (parsed.truncated) append(" · oltre il massimo")
-                        },
-                        style = MaterialTheme.typography.bodySmall, color = if (parsed.invalid.isEmpty() && !parsed.truncated) Palette.TextDim else Palette.Amber,
-                        modifier = Modifier.weight(1f),
-                    )
-                    TextButton(onClick = {
-                        add(parsed.addresses.map { a -> MultiTarget(a, devices.firstOrNull { it.address.equals(a, true) }?.name) })
-                        pasted = ""
-                    }, enabled = parsed.addresses.isNotEmpty()) { Text("Aggiungi") }
+                val parsed = remember(pasted) { TargetParser.parse(pasted, 1000) }
+                val pastePreview = remember(parsed, targets) { TargetParser.previewAdd(parsed.addresses, targets.map { it.address }) }
+                if (pasted.isNotBlank()) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            buildString {
+                                append(pastePreview.message)
+                                if (parsed.invalid.isNotEmpty()) append(" Non validi: ${parsed.invalid.take(3).joinToString(", ")}${if (parsed.invalid.size > 3) "…" else ""}.")
+                                if (parsed.addresses.isEmpty() && parsed.invalid.isEmpty()) append("Scrivi almeno un indirizzo.")
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (!pastePreview.warning && parsed.invalid.isEmpty()) Palette.TextDim else Palette.Amber,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = {
+                            add(pastePreview.newAddresses.map { a -> MultiTarget(a, devices.firstOrNull { it.address.equals(a, true) }?.name) })
+                            pasted = ""
+                        }, enabled = pastePreview.canAdd) { Text("Aggiungi") }
+                    }
                 }
             }
         }

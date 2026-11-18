@@ -59,4 +59,23 @@ object TargetParser {
         }
         return Result(out.toList(), invalid, truncated)
     }
+
+    /** Anteprima di un'aggiunta all'elenco: quanti indirizzi nuovi, quanti doppi, e un messaggio chiaro. */
+    data class AddPreview(val newAddresses: List<String>, val duplicates: Int, val message: String, val canAdd: Boolean, val warning: Boolean)
+
+    fun previewAdd(addresses: List<String>, existing: Collection<String>, max: Int = MAX_TARGETS): AddPreview {
+        val have = existing.map { it.lowercase() }.toSet()
+        val fresh = addresses.filter { it.lowercase() !in have }.distinctBy { it.lowercase() }
+        val dup = addresses.size - fresh.size
+        val room = (max - existing.size).coerceAtLeast(0)
+        fun n(k: Int) = if (k == 1) "1 indirizzo" else "$k indirizzi"
+        return when {
+            addresses.isEmpty() -> AddPreview(fresh, dup, "", false, false)
+            fresh.isEmpty() -> AddPreview(fresh, dup,
+                if (addresses.size == 1) "${addresses[0]} è già nell'elenco." else "Sono già tutti nell'elenco.", false, true)
+            room == 0 -> AddPreview(fresh, dup, "L'elenco è pieno ($max schede): premi «Svuota» o togli qualche scheda.", false, true)
+            fresh.size > room -> AddPreview(fresh, dup, "${n(fresh.size)} nuovi, ma c'è posto solo per altri $room (massimo $max): verranno aggiunti i primi $room.", true, true)
+            else -> AddPreview(fresh, dup, "${n(fresh.size)} da aggiungere" + (if (dup > 0) " · ${n(dup)} già nell'elenco" else "") + ".", true, false)
+        }
+    }
 }

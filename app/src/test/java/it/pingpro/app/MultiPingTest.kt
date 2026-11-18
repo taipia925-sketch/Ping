@@ -27,6 +27,21 @@ class MultiPingTest {
         assertEquals(listOf("192.168.1.1"), TargetParser.parse("192.168.1.1 192.168.1.1").addresses) // duplicati
     }
 
+    @Test fun addPreviewMessages() {
+        val full = (1..100).map { "192.168.1.$it" }
+        // Caso segnalato dall'utente: elenco pieno e indirizzo già presente.
+        val dup = TargetParser.previewAdd(listOf("192.168.1.1"), full)
+        assertEquals("192.168.1.1 è già nell'elenco.", dup.message); assertTrue(!dup.canAdd)
+        val noRoom = TargetParser.previewAdd(listOf("192.168.1.200"), full)
+        assertTrue(noRoom.message.startsWith("L'elenco è pieno")); assertTrue(!noRoom.canAdd)
+        val ok = TargetParser.previewAdd(listOf("10.0.0.1", "10.0.0.2", "192.168.1.5"), listOf("192.168.1.5"))
+        assertEquals("2 indirizzi da aggiungere · 1 indirizzo già nell'elenco.", ok.message); assertTrue(ok.canAdd)
+        val one = TargetParser.previewAdd(listOf("10.0.0.1"), emptyList())
+        assertEquals("1 indirizzo da aggiungere.", one.message)
+        val partial = TargetParser.previewAdd((1..10).map { "10.0.0.$it" }, (1..95).map { "192.168.1.$it" })
+        assertTrue(partial.message.contains("posto solo per altri 5")); assertTrue(partial.canAdd)
+    }
+
     @Test fun rangesAndLimit() {
         assertEquals(21L, TargetParser.rangeSize("192.168.1.100", "192.168.1.120"))
         assertNull(TargetParser.rangeSize("192.168.1.120", "192.168.1.100"))

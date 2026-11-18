@@ -20,7 +20,7 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ## 1. Installazione sul Samsung Galaxy (S26 Ultra o altri)
 
-1. Scarica sul telefono il file **[`release/PingPro-2.0.1.apk`](release/PingPro-2.0.1.apk)**
+1. Scarica sul telefono il file **[`release/PingPro-2.0.2.apk`](release/PingPro-2.0.2.apk)**
    (da GitHub: apri il file → pulsante **Download raw file**).
 2. Apri il file scaricato (dalla notifica del download oppure da **Archivio › Download**).
 3. Alla prima installazione Android chiede di autorizzare la fonte:

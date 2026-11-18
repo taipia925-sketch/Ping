@@ -200,6 +200,10 @@ class ScreensSnapshotTest {
         finally { it.pingpro.app.ui.theme.Palette.dark = false }
     }
 
+    @Test fun multi_edit_full() = shot {
+        MultiEditScreen((1..100).map { MultiTarget("192.168.1.$it") }, null, devices, groupsList, wifi, { _, _ -> }, {}, {}, {}, {}, {})
+    }
+
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }
     @Test fun devices() = shot { DevicesScreen(devices, hist, false, {}, {}, {}) }
     @Test fun guide() = pages(4) { GuideScreen({}, {}) }
