@@ -37,6 +37,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     val network = pa.network.interfaces
     val multi = pa.multi.state
     val groups = pa.groups.groups
+    val updater = pa.updater
+    val updateState = pa.updater.state
+    var dismissedUpdate by mutableStateOf(pa.updater.dismissedVersion)
 
     /** true quando la schermata Test mostra il controllo di più schede. */
     var multiMode by mutableStateOf(pa.multi.state.value.running)

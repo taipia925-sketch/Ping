@@ -20,7 +20,7 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ## 1. Installazione sul Samsung Galaxy (S26 Ultra o altri)
 
-1. Scarica sul telefono il file **[`release/PingPro-2.0.2.apk`](release/PingPro-2.0.2.apk)**
+1. Scarica sul telefono il file **[`release/PingPro-2.1.0.apk`](release/PingPro-2.1.0.apk)**
    (da GitHub: apri il file → pulsante **Download raw file**).
 2. Apri il file scaricato (dalla notifica del download oppure da **Archivio › Download**).
 3. Alla prima installazione Android chiede di autorizzare la fonte:
@@ -34,6 +34,17 @@ rete Wi-Fi/Ethernet a cui è collegato.
    test continuativo resta visibile e attivo anche con lo schermo spento.
 
 Requisiti: Android 8.0 o superiore.
+
+### Aggiornamenti
+
+Dalla versione 2.1.0 l'app si aggiorna da sola: all'avvio (quando c'è Internet) controlla il file
+[`release/latest.json`](release/latest.json) di questo repository e, se c'è una versione nuova, propone
+**Aggiorna ora**. L'APK scaricato viene verificato con la sua impronta SHA-256 e Android lo installa solo se
+è firmato con la stessa chiave dell'app già installata. La prima volta Android chiede di autorizzare PingPro
+a installare app (Impostazioni › Installa app sconosciute). Controllo manuale: Impostazioni › Aggiornamenti › Controlla ora.
+
+Per pubblicare una nuova versione: aumentare `versionCode`/`versionName` in `app/build.gradle.kts`, poi
+`scripts/release.sh "Novità"` e push sul ramo predefinito.
 
 ## 2. Uso in 4 passi
 

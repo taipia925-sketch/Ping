@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import it.pingpro.app.data.AppSettings
+import it.pingpro.app.BuildConfig
 import it.pingpro.app.ping.PingConfig
 import it.pingpro.app.ui.components.AppCard
 import it.pingpro.app.ui.components.SegmentedToggle
@@ -34,7 +35,8 @@ import it.pingpro.app.ui.theme.Mono
 import it.pingpro.app.ui.theme.Palette
 
 @Composable
-fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings) -> Unit, onBack: () -> Unit, onTutorial: () -> Unit) {
+fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings) -> Unit, onBack: () -> Unit, onTutorial: () -> Unit,
+    updates: (@Composable () -> Unit)? = null) {
     val isDefault = settings.count == PingConfig.WINDOWS_COUNT && settings.payloadSize == PingConfig.WINDOWS_PAYLOAD &&
         settings.timeoutMs == PingConfig.WINDOWS_TIMEOUT_MS && settings.ttl == PingConfig.WINDOWS_TTL
     LazyColumn(
@@ -91,11 +93,12 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
                 Toggle("Mantieni lo schermo acceso", "Durante il test lo schermo non si spegne da solo", settings.keepScreenOn) { v -> update { it.copy(keepScreenOn = v) } }
             }
         }
+        if (updates != null) item { updates() }
         item {
             AppCard {
                 Text("Aiuto", style = MaterialTheme.typography.titleMedium)
                 TextButton(onClick = onTutorial) { Text("Rivedi il tutorial iniziale") }
-                Text("PingPro 2.0 · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+                Text("PingPro ${BuildConfig.VERSION_NAME} · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
             }
         }
     }

@@ -13,8 +13,8 @@ android {
         applicationId = "it.pingpro.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "2.0.2"
+        versionCode = 8
+        versionName = "2.1.0"
     }
 
     signingConfigs {
@@ -39,7 +39,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
     testOptions { unitTests.isReturnDefaultValues = true }
 }
 

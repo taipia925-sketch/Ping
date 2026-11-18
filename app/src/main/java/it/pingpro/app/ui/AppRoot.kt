@@ -45,6 +45,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import it.pingpro.app.data.Export
+import it.pingpro.app.data.UpdateState
 import it.pingpro.app.ping.LinkStatus
 import it.pingpro.app.ping.PingMode
 import it.pingpro.app.ui.screens.CompareScreen
@@ -54,6 +55,9 @@ import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryDetailScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.UpdateDialog
+import it.pingpro.app.ui.screens.UpdateSettingsCard
+import it.pingpro.app.ui.screens.updateDialogVisible
 import it.pingpro.app.ui.screens.MultiScreen
 import it.pingpro.app.ui.screens.MultiEditScreen
 import it.pingpro.app.ui.screens.LabScreen
@@ -89,6 +93,8 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     val network by vm.network.collectAsStateWithLifecycle()
     val multi by vm.multi.collectAsStateWithLifecycle()
     val groups by vm.groups.collectAsStateWithLifecycle()
+    val updateState by vm.updateState.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(Unit) { vm.updater.checkInBackground() }
     val context = LocalContext.current
     val toast: (String) -> Unit = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
 
@@ -286,7 +292,11 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                     CompareScreen(vm, e.arguments?.getString("a") ?: "", e.arguments?.getString("b") ?: "", onBack = { nav.popBackStack() })
                 }
                 composable("settings") {
-                    SettingsScreen(settings, vm::updateSettings, onBack = { nav.popBackStack() }, onTutorial = { showTutorial = true })
+                    SettingsScreen(settings, vm::updateSettings, onBack = { nav.popBackStack() }, onTutorial = { showTutorial = true }) {
+                        UpdateSettingsCard(updateState, vm.updater.currentVersionName, vm.updater.lastCheck,
+                            onCheck = { vm.dismissedUpdate = 0; vm.updater.dismissedVersion = 0; vm.updater.check() },
+                            onDownload = { vm.updater.download(it) })
+                    }
                 }
             }
         }
@@ -295,6 +305,20 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.statusBars).background(Palette.Bg))
     TourOverlay(tour)
     }
+    }
+
+    if (updateDialogVisible(updateState, vm.dismissedUpdate)) {
+        UpdateDialog(
+            state = updateState, currentVersion = vm.updater.currentVersionName,
+            canInstall = { vm.updater.canInstall() },
+            onDownload = { vm.updater.download(it) },
+            onLater = { info ->
+                if (info != null) { vm.dismissedUpdate = info.versionCode; vm.updater.dismissedVersion = info.versionCode }
+                if (updateState !is UpdateState.Available) vm.updater.reset()
+            },
+            onAllowInstall = { runCatching { vm.updater.openInstallPermission() } },
+            onInstall = { f -> runCatching { vm.updater.install(f) }.onFailure { toast("Impossibile aprire l'installazione") } },
+        )
     }
 
     draft?.let { d ->
