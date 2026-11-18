@@ -170,12 +170,12 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawLabel(m: TextMe
 
 /** Mappa colorata degli ultimi pacchetti: un quadratino per ogni richiesta. */
 @Composable
-fun PacketStrip(samples: List<PingSample>, modifier: Modifier = Modifier, slots: Int = 40, highLatency: Int = 100) {
+fun PacketStrip(samples: List<PingSample>, modifier: Modifier = Modifier, slots: Int = 40, highLatency: Int = 100, height: Dp = 26.dp) {
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val visible = samples.takeLast(slots)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            Canvas(Modifier.fillMaxWidth().height(26.dp)) {
-                val gap = 3.dp.toPx()
+            Canvas(Modifier.fillMaxWidth().height(height)) {
+                val gap = (if (slots > 30) 2 else 3).dp.toPx()
                 val cell = (size.width - gap * (slots - 1)) / slots
                 for (i in 0 until slots) {
                     val idx = i - (slots - visible.size)

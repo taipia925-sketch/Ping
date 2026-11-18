@@ -92,33 +92,24 @@ class PingController(
         var choice: NetworkChoice? = null
         try {
             // 1) Scelta della rete e risoluzione dell'indirizzo.
-            val literal = NetworkResolver.isIpv4Literal(config.target) || config.target.contains(':')
-            val preliminary = if (literal) runCatching { InetAddress.getByName(config.target) }.getOrNull() else null
-            choice = NetworkResolver.choose(context, preliminary)
-            resolved = try {
-                preliminary ?: NetworkResolver.resolve(config.target, choice.network)
+            val r = try {
+                PingEngine.resolve(context, config.target)
             } catch (e: UnknownHostException) {
-                fail(tracker, "Impossibile trovare l'host ${config.target}. Verificare il nome e riprovare.")
+                fail(tracker, PingEngine.unknownHostMessage(config.target))
                 return
             }
-            if (preliminary == null) choice = NetworkResolver.choose(context, resolved)
-            val ip = resolved.hostAddress ?: config.target
+            resolved = r.address
+            choice = r.network
+            val ip = r.ip
 
             // 2) Apertura del motore ICMP (socket nativo, con ripiego sul comando di sistema).
-            pinger = try {
-                IcmpSocketPinger(resolved, choice.network, config.ttl, config.payloadSize)
-            } catch (e: Throwable) {
-                Log.w(TAG, "Socket ICMP non disponibile, uso ping di sistema", e)
-                if (e is ErrnoException || e is SecurityException || e is java.io.IOException)
-                    SystemPingPinger(resolved, config.ttl, config.payloadSize)
-                else throw e
-            }
-            wifiLock = acquireWifiLock()
+            pinger = PingEngine.openPinger(r, config.ttl, config.payloadSize)
+            wifiLock = PingEngine.acquireWifiLock(context)
 
             tracker.addEvent(PingEvent(System.currentTimeMillis(), EventKind.START,
                 "Test avviato verso $ip",
                 "Rete: ${choice.label} · ${config.payloadSize} byte di dati · ${pinger.engineName}"))
-            if (!choice.sameSubnet && preliminary != null && (preliminary.isSiteLocalAddress || preliminary.isLinkLocalAddress)) {
+            if (r.outsidePhoneNetwork) {
                 tracker.addEvent(PingEvent(System.currentTimeMillis(), EventKind.INFO,
                     "Indirizzo fuori dalla rete del telefono",
                     "Il telefono non è collegato alla sottorete di $ip: verificare di essere connessi al Wi-Fi corretto."))
@@ -198,14 +189,6 @@ class PingController(
             lastRecordId = recordId,
         )
     }
-
-    /** Disattiva il risparmio energetico del Wi-Fi durante il test per misure di latenza più stabili. */
-    @Suppress("DEPRECATION")
-    private fun acquireWifiLock(): WifiManager.WifiLock? = runCatching {
-        val wm = context.applicationContext.getSystemService(WifiManager::class.java)
-        val mode = if (Build.VERSION.SDK_INT >= 29) WifiManager.WIFI_MODE_FULL_LOW_LATENCY else WifiManager.WIFI_MODE_FULL_HIGH_PERF
-        wm.createWifiLock(mode, "PingPro:test").apply { setReferenceCounted(false); acquire() }
-    }.getOrNull()
 
     companion object { private const val TAG = "PingController" }
 }

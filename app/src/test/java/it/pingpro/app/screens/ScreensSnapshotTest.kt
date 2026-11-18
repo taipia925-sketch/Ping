@@ -33,6 +33,12 @@ import it.pingpro.app.ui.TestUi
 import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.MultiScreen
+import it.pingpro.app.ui.screens.MultiEditScreen
+import it.pingpro.app.ping.MultiState
+import it.pingpro.app.ping.TargetState
+import it.pingpro.app.data.MultiTarget
+import it.pingpro.app.data.TargetGroup
 import it.pingpro.app.ui.screens.QuizScreen
 import it.pingpro.app.ui.screens.DiagnosisScreen
 import it.pingpro.app.ui.screens.LabContent
@@ -150,6 +156,42 @@ class ScreensSnapshotTest {
                 TourOverlay(tour)
             }
         }
+    }
+
+    private fun multiState(running: Boolean): MultiState {
+        val names = listOf("Alimentatore", "CPU principale", "I/O rack 1", "I/O rack 2", "Inverter A", "Inverter B", "HMI", "Modulo misure")
+        val t = names.mapIndexed { i, n ->
+            val tr = SessionTracker()
+            for (k in 1..30) {
+                val lost = (i == 4 && k > 26) || (i == 2 && k == 12)
+                tr.add(if (lost) PingSample(k, k * 1000L, ReplyStatus.TIMEOUT) else PingSample(k, k * 1000L, ReplyStatus.OK, 1.8 + i * 0.7 + (k % 4) * 0.4))
+            }
+            TargetState(MultiTarget("192.168.1.${100 + i}", n), n, "192.168.1.${100 + i}", tr.status, tr.stats, tr.samples.takeLast(60),
+                tr.consecutiveLost, tr.outages, tr.events, net, finished = !running)
+        }
+        return MultiState(running, PingMode.CONTINUOUS, 4, "Quadro linea 3", t, System.currentTimeMillis() - 30_000, if (running) null else System.currentTimeMillis(), "b")
+    }
+    private val multiTargets = (0 until 8).map { MultiTarget("192.168.1.${100 + it}", listOf("Alimentatore", "CPU principale", "I/O rack 1", "I/O rack 2", "Inverter A", "Inverter B", "HMI", "Modulo misure")[it]) }
+    private val groupsList = listOf(TargetGroup("g1", "Quadro linea 3", multiTargets), TargetGroup("g2", "Linea 4", multiTargets.take(5)))
+
+    @Test fun multi_running() = pages(3) {
+        MultiScreen(multiState(true), multiTargets, "Quadro linea 3", groupsList, PingMode.CONTINUOUS, AppSettings(), false,
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    }
+    @Test fun multi_idle() = shot {
+        MultiScreen(MultiState(), multiTargets, "Quadro linea 3", groupsList, PingMode.CONTINUOUS, AppSettings(), false,
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    }
+    @Test fun multi_edit() = pages(2) {
+        MultiEditScreen(multiTargets.take(3), "Quadro linea 3", devices, groupsList, wifi, { _, _ -> }, {}, {}, {}, {}, {})
+    }
+    @Test fun history_batch() = shot {
+        val batch = (0 until 4).map { i ->
+            TestSummary("b$i", "192.168.1.${100 + i}", "192.168.1.${100 + i}", listOf("Alimentatore", "CPU", "I/O rack", "Inverter A")[i], PingMode.CONTINUOUS,
+                4, 32, 4000, 128, 1_700_000_000_000L, 1_700_000_300_000L, 300, if (i == 3) 0 else 300 - i, 0.9, 2.0 + i, 8.0, 1.0, 0, "Wi-Fi", "Più schede",
+                batchId = "B", batchName = "Quadro linea 3")
+        }
+        HistoryScreen(batch + hist, {}, { _, _ -> }, {})
     }
 
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }

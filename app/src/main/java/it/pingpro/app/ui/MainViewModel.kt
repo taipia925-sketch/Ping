@@ -8,6 +8,9 @@ import androidx.lifecycle.AndroidViewModel
 import it.pingpro.app.PingApp
 import it.pingpro.app.data.AppSettings
 import it.pingpro.app.data.SavedDevice
+import it.pingpro.app.data.MultiTarget
+import it.pingpro.app.data.TargetGroup
+import it.pingpro.app.ping.TargetParser
 import it.pingpro.app.data.TestDetail
 import it.pingpro.app.data.TestSummary
 import it.pingpro.app.ping.NetworkResolver
@@ -32,12 +35,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     val history = pa.history.items
     val settings = pa.settings.settings
     val network = pa.network.interfaces
+    val multi = pa.multi.state
+    val groups = pa.groups.groups
+
+    /** true quando la schermata Test mostra il controllo di più schede. */
+    var multiMode by mutableStateOf(pa.multi.state.value.running)
+    var multiTargets by mutableStateOf(pa.groups.loadCurrent().second)
+        private set
+    var multiName by mutableStateOf(pa.groups.loadCurrent().first)
+        private set
+    var multiRunMode by mutableStateOf(PingMode.CONTINUOUS)
+
+    val anyRunning: Boolean get() = session.value.running || multi.value.running
+
+    fun setMultiList(targets: List<MultiTarget>, name: String? = multiName) {
+        multiTargets = targets.distinctBy { it.address.lowercase() }.take(TargetParser.MAX_TARGETS)
+        multiName = name
+        pa.groups.saveCurrent(multiName, multiTargets)
+    }
+
+    fun startMulti() {
+        if (anyRunning || multiTargets.isEmpty()) return
+        pa.multi.start(multiTargets, multiRunMode, multiName)
+    }
+
+    fun stopMulti() = pa.multi.stop()
+    fun saveGroup(name: String) { pa.groups.save(name, multiTargets); setMultiList(multiTargets, name.trim()) }
+    fun loadGroup(g: TargetGroup) = setMultiList(g.targets, g.name)
+    fun deleteGroup(id: String) = pa.groups.delete(id)
 
     fun refreshNetwork() = pa.network.refresh()
 
     /** Avvia subito un test verso un indirizzo (es. il gateway) senza doverlo scrivere. */
     fun pingNow(address: String) {
-        if (session.value.running) return
+        if (anyRunning) return
         target = address
         start()
     }
@@ -55,13 +86,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     }
 
     override fun start() {
-        if (!targetValid) return
+        if (!targetValid || multi.value.running) return
         pa.controller.start(buildConfig())
     }
 
     /** Controllo rapido per la diagnosi: test singolo di 4 richieste con i parametri di Windows. */
     fun runCheck(address: String): Boolean {
-        if (session.value.running) return false
+        if (anyRunning) return false
         pa.controller.start(PingConfig(address.trim(), PingMode.SINGLE))
         return true
     }
@@ -69,6 +100,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     override fun stop() = pa.controller.stop()
 
     fun repeat(s: TestSummary) {
+        if (anyRunning) return
+        multiMode = false
         target = s.target
         mode = s.mode
         pa.controller.start(PingConfig(s.target, s.mode, s.count, s.payloadSize, s.timeoutMs, s.ttl))

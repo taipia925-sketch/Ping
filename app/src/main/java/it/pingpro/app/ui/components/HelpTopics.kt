@@ -108,4 +108,11 @@ enum class HelpTopic(val title: String, val body: String) {
         "Segnale Wi-Fi",
         "Potenza del segnale ricevuto in dBm: più vicino a 0, migliore. Da 0 a -55 ottimo, fino a -67 buono, fino a -75 discreto, fino a -85 debole, sotto -85 molto debole. Con segnale debole aumentano tempi e pacchetti persi."
     ),
+    MULTI(
+        "Più schede insieme",
+        "Controlla fino a 100 schede contemporaneamente, ad esempio tutte quelle di un apparato.\n\n" +
+            "Ogni scheda ha il proprio ping indipendente, con la stessa cadenza di Windows (circa una richiesta al secondo): è come aprire più finestre \"ping\" o \"ping -t\" insieme.\n\n" +
+            "Puoi comporre l'elenco con le schede salvate, con un intervallo di indirizzi (es. da 192.168.1.100 a 192.168.1.120) o incollando un elenco, e salvarlo come gruppo con il nome dell'apparato.\n\n" +
+            "Le schede che non rispondono vengono mostrate per prime e in rosso; tocca una scheda per vederne tutti i dettagli."
+    ),
 }

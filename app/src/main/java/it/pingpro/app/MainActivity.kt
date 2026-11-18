@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
 
         // Schermo sempre acceso durante il test (se abilitato nelle impostazioni).
         lifecycleScope.launch {
-            app.controller.state.combine(app.settings.settings) { s, st -> s.running && st.keepScreenOn }.collect { keep ->
+            combine(app.controller.state, app.multi.state, app.settings.settings) { s, m, st -> (s.running || m.running) && st.keepScreenOn }.collect { keep ->
                 if (keep) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }

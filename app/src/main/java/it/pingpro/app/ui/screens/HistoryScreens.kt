@@ -30,6 +30,8 @@ import androidx.compose.material.icons.automirrored.outlined.CompareArrows
 import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.IosShare
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -50,6 +52,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -95,6 +99,7 @@ fun HistoryScreen(
     var selecting by remember { mutableStateOf(false) }
     var selected by remember { mutableStateOf(listOf<String>()) }
     var confirmClear by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(setOf<String>()) }
 
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -131,57 +136,43 @@ fun HistoryScreen(
         if (items.isEmpty()) {
             item { EmptyState(Icons.Outlined.History, "Nessun test ancora", "Ogni test che esegui viene salvato qui automaticamente, con grafici e statistiche, per poterlo rivedere, esportare o confrontare.") }
         }
-        var lastDay = ""
+        // I test di più schede eseguiti insieme vengono raggruppati in un unico blocco.
+        val entries = ArrayList<Pair<String?, List<TestSummary>>>()
+        val batchIndex = HashMap<String, Int>()
         items.forEach { s ->
-            val day = Format.dateTime(s.startedAt).substring(0, 10)
+            val b = s.batchId
+            if (b == null) entries.add(null to listOf(s))
+            else {
+                val i = batchIndex[b]
+                if (i == null) { batchIndex[b] = entries.size; entries.add(b to listOf(s)) }
+                else entries[i] = b to (entries[i].second + s)
+            }
+        }
+        var lastDay = ""
+        entries.forEach { (batch, group) ->
+            val first = group.first()
+            val day = Format.dateTime(first.startedAt).substring(0, 10)
             if (day != lastDay) {
                 lastDay = day
                 item(key = "h$day") {
                     Text(day, style = MaterialTheme.typography.labelLarge, color = Palette.TextFaint, modifier = Modifier.padding(start = 6.dp, top = 8.dp))
                 }
             }
-            item(key = s.id) {
-                val isSel = s.id in selected
-                val border by animateColorAsState(if (isSel) Palette.Accent else Palette.Outline, label = "sel")
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(22.dp))
-                        .background(Palette.Surface)
-                        .border(1.dp, border, RoundedCornerShape(22.dp))
-                        .combinedClickable(
-                            onClick = {
-                                if (selecting) {
-                                    selected = if (isSel) selected - s.id else (selected + s.id).takeLast(2)
-                                } else onOpen(s.id)
-                            },
-                            onLongClick = { selecting = true; selected = listOf(s.id) },
-                        )
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (selecting) {
-                        Icon(if (isSel) Icons.Outlined.CheckCircle else Icons.Outlined.RadioButtonUnchecked, null,
-                            tint = if (isSel) Palette.Accent else Palette.TextFaint)
-                        Spacer(Modifier.width(12.dp))
-                    }
-                    Box(Modifier.size(10.dp).clip(CircleShape).background(resultColor(s)))
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(s.displayName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(
-                            "${Format.time(s.startedAt)} · ${if (s.mode == PingMode.CONTINUOUS) "continuo" else "singolo"} · ${Format.duration(s.durationMs)}" +
-                                if (s.deviceName != null) " · ${s.target}" else "",
-                            style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(s.avgMs?.let { "${Format.ms(it)} ms" } ?: "—", style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                            color = s.avgMs?.let { latencyColor(it) } ?: Palette.Red)
-                        Text("${s.received}/${s.sent} · ${Format.percent(s.lossPercent)} persi", style = MaterialTheme.typography.bodySmall,
-                            color = if (s.lost > 0) Palette.Amber else Palette.TextDim)
-                    }
+            fun rowFor(s: TestSummary, indent: Boolean) {
+                item(key = s.id) {
+                    val isSel = s.id in selected
+                    HistoryRow(s, selecting, isSel, indent,
+                        onClick = { if (selecting) selected = if (isSel) selected - s.id else (selected + s.id).takeLast(2) else onOpen(s.id) },
+                        onLongClick = { selecting = true; selected = listOf(s.id) })
                 }
+            }
+            if (batch == null) rowFor(first, false)
+            else {
+                val open = batch in expanded
+                item(key = "b$batch") {
+                    BatchCard(group, open) { expanded = if (open) expanded - batch else expanded + batch }
+                }
+                if (open) group.sortedBy { it.displayName.lowercase() }.forEach { rowFor(it, true) }
             }
         }
     }
@@ -194,6 +185,76 @@ fun HistoryScreen(
             confirmButton = { TextButton(onClick = { onClear(); confirmClear = false }) { Text("Elimina tutto", color = Palette.Red) } },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Annulla") } },
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HistoryRow(s: TestSummary, selecting: Boolean, isSel: Boolean, indent: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
+    val border by animateColorAsState(if (isSel) Palette.Accent else Palette.Outline, label = "sel")
+    Row(
+        Modifier
+            .padding(start = if (indent) 18.dp else 0.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(Palette.Surface)
+            .border(1.dp, border, RoundedCornerShape(22.dp))
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (selecting) {
+            Icon(if (isSel) Icons.Outlined.CheckCircle else Icons.Outlined.RadioButtonUnchecked, null,
+                tint = if (isSel) Palette.Accent else Palette.TextFaint)
+            Spacer(Modifier.width(12.dp))
+        }
+        Box(Modifier.size(10.dp).clip(CircleShape).background(resultColor(s)))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(s.displayName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                "${Format.time(s.startedAt)} · ${if (s.mode == PingMode.CONTINUOUS) "continuo" else "singolo"} · ${Format.duration(s.durationMs)}" +
+                    if (s.deviceName != null) " · ${s.target}" else "",
+                style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Column(horizontalAlignment = Alignment.End) {
+            Text(s.avgMs?.let { "${Format.ms(it)} ms" } ?: "—", style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                color = s.avgMs?.let { latencyColor(it) } ?: Palette.Red)
+            Text("${s.received}/${s.sent} · ${Format.percent(s.lossPercent)} persi", style = MaterialTheme.typography.bodySmall,
+                color = if (s.lost > 0) Palette.Amber else Palette.TextDim)
+        }
+    }
+}
+
+/** Blocco riassuntivo di un test di più schede nello storico. */
+@Composable
+private fun BatchCard(group: List<TestSummary>, open: Boolean, onToggle: () -> Unit) {
+    val first = group.first()
+    val ok = group.count { it.received > 0 && it.lost == 0 }
+    val warn = group.count { it.received > 0 && it.lost > 0 }
+    val none = group.count { it.received == 0 }
+    val color = when { none > 0 -> Palette.Red; warn > 0 -> Palette.Amber; else -> Palette.Green }
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Palette.Surface)
+            .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(22.dp)).clickable(onClick = onToggle).padding(16.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Folder, null, tint = color)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(first.batchName ?: "Più schede", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("${Format.time(first.startedAt)} · ${group.size} schede · ${if (first.mode == PingMode.CONTINUOUS) "continuo" else "singolo"} · ${Format.duration(first.durationMs)}",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Icon(Icons.Outlined.ExpandMore, if (open) "Chiudi" else "Apri", tint = Palette.TextDim, modifier = Modifier.rotate(if (open) 180f else 0f))
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (ok > 0) Pill("$ok OK", Palette.Green)
+            if (warn > 0) Pill("$warn con perdite", Palette.Amber)
+            if (none > 0) Pill("$none senza risposta", Palette.Red)
+        }
     }
 }
 

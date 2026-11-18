@@ -136,6 +136,8 @@ fun TestScreen(
     onStartRequested: () -> Unit = {},
     lan: NetInterfaceInfo? = null,
     onOpenNetwork: () -> Unit = {},
+    onSwitchMulti: (() -> Unit)? = null,
+    multiRunning: Boolean = false,
 ) {
     val context = LocalContext.current
     val hasSession = session.status != LinkStatus.IDLE
@@ -155,6 +157,10 @@ fun TestScreen(
             }
         }
 
+        if (onSwitchMulti != null) item {
+            SingleMultiSwitch(false, !session.running && !multiRunning) { if (it) onSwitchMulti() }
+        }
+
         item {
             TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice, lan, onOpenNetwork)
         }
@@ -162,7 +168,7 @@ fun TestScreen(
         item {
             StartStopButton(
                 running = session.running,
-                enabled = vm.targetValid || session.running,
+                enabled = (vm.targetValid && !multiRunning) || session.running,
                 progress = if (session.running && session.config?.mode == PingMode.SINGLE)
                     session.stats.sent.toFloat() / (session.config.count.coerceAtLeast(1)) else null,
                 onStart = { onStartRequested(); vm.start() },
@@ -349,7 +355,7 @@ private fun TargetCard(
 }
 
 @Composable
-private fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?, onStart: () -> Unit, onStop: () -> Unit) {
+fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?, onStart: () -> Unit, onStop: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by androidx.compose.animation.core.animateFloatAsState(if (pressed) 0.97f else 1f, label = "s")
@@ -707,7 +713,7 @@ private fun EventRow(e: PingEvent, last: Boolean) {
 }
 
 @Composable
-private fun FinishedActions(onCopy: () -> Unit, onShare: () -> Unit, onRepeat: () -> Unit, onDetail: () -> Unit) {
+fun FinishedActions(onCopy: () -> Unit, onShare: () -> Unit, onRepeat: () -> Unit, onDetail: () -> Unit) {
     AppCard {
         SectionHeader("Risultati")
         Spacer(Modifier.height(12.dp))

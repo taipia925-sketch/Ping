@@ -143,5 +143,44 @@ class HistoryRepository(context: Context) {
         scope.launch { dir.listFiles()?.forEach { it.delete() }; writeIndex(emptyList()) }
     }
 
-    companion object { const val MAX_ITEMS = 200 }
+    companion object { const val MAX_ITEMS = 1000 }
+}
+
+/** Gruppi di schede salvati e l'elenco attualmente in uso per il test di più schede. */
+class GroupRepository(context: Context) {
+    private val prefs = context.getSharedPreferences("groups", Context.MODE_PRIVATE)
+    private val _groups = MutableStateFlow(loadGroups())
+    val groups: StateFlow<List<TargetGroup>> = _groups.asStateFlow()
+
+    private fun loadGroups(): List<TargetGroup> = runCatching {
+        val a = JSONArray(prefs.getString("list", "[]"))
+        (0 until a.length()).map { TargetGroup.fromJson(a.getJSONObject(it)) }
+    }.getOrDefault(emptyList())
+
+    private fun persist(list: List<TargetGroup>) {
+        _groups.value = list
+        prefs.edit().putString("list", JSONArray().apply { list.forEach { put(it.toJson()) } }.toString()).apply()
+    }
+
+    fun save(name: String, targets: List<MultiTarget>): TargetGroup {
+        val existing = _groups.value.firstOrNull { it.name.equals(name.trim(), ignoreCase = true) }
+        val g = TargetGroup(existing?.id ?: UUID.randomUUID().toString(), name.trim(), targets)
+        persist(if (existing != null) _groups.value.map { if (it.id == g.id) g else it } else _groups.value + g)
+        return g
+    }
+
+    fun delete(id: String) = persist(_groups.value.filterNot { it.id == id })
+
+    fun loadCurrent(): Pair<String?, List<MultiTarget>> = runCatching {
+        val o = org.json.JSONObject(prefs.getString("current", "{}") ?: "{}")
+        val a = o.optJSONArray("targets") ?: JSONArray()
+        (if (o.isNull("name") || !o.has("name")) null else o.getString("name")) to
+            (0 until a.length()).map { MultiTarget.fromJson(a.getJSONObject(it)) }
+    }.getOrDefault(null to emptyList())
+
+    fun saveCurrent(name: String?, targets: List<MultiTarget>) {
+        val o = org.json.JSONObject().put("name", name ?: org.json.JSONObject.NULL)
+            .put("targets", JSONArray().apply { targets.forEach { put(it.toJson()) } })
+        prefs.edit().putString("current", o.toString()).apply()
+    }
 }

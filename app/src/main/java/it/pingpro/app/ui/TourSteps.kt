@@ -5,6 +5,7 @@ import it.pingpro.app.ui.components.TourStep
 /** Passi del tour della schermata Test: ogni passo evidenzia l'elemento reale. */
 val testScreenTour = listOf(
     TourStep(null, "Tour dell'app", "Ti mostro a cosa serve ogni elemento della schermata principale. Tocca «Avanti» per proseguire, «Chiudi» per uscire in qualsiasi momento."),
+    TourStep("multi", "Una scheda o più schede", "Con «Più schede» controlli molte schede contemporaneamente, ad esempio tutte quelle di un apparato: ognuna ha il proprio ping, come più finestre del Prompt aperte insieme."),
     TourStep("address", "Indirizzo da controllare", "Qui va l'indirizzo IP della scheda, ad esempio 192.168.1.100. È quello che in Windows scriveresti dopo la parola «ping»."),
     TourStep("chips", "Scelte rapide", "Il pulsante verde «Gateway» inserisce il gateway predefinito senza doverlo scrivere. Seguono le schede salvate e gli indirizzi usati di recente: un tocco e l'indirizzo è pronto."),
     TourStep("ipconfig", "ipconfig", "Apre la scheda Rete: indirizzo del telefono, subnet mask e gateway predefinito, come il comando ipconfig di Windows."),

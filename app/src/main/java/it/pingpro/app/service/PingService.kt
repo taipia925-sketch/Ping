@@ -18,6 +18,9 @@ import it.pingpro.app.MainActivity
 import it.pingpro.app.PingApp
 import it.pingpro.app.R
 import it.pingpro.app.ping.LinkStatus
+import it.pingpro.app.ping.MultiState
+import it.pingpro.app.ping.SessionState
+import it.pingpro.app.ping.TargetState
 import it.pingpro.app.ping.PingMode
 import it.pingpro.app.ui.Format
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -45,9 +49,12 @@ class PingService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val controller = (application as PingApp).controller
+        val app = application as PingApp
+        val controller = app.controller
+        val multi = app.multi
         if (intent?.action == ACTION_STOP) {
             controller.stop()
+            multi.stop()
             return START_NOT_STICKY
         }
         val type = if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE else 0
@@ -58,25 +65,39 @@ class PingService : Service() {
         }
         collector?.cancel()
         collector = scope.launch {
-            controller.state.collectLatest { s ->
-                if (!s.running) {
+            controller.state.combine(multi.state) { a, b -> a to b }.collectLatest { (s, m) ->
+                if (!s.running && !m.running) {
                     stopSelf()
                     return@collectLatest
                 }
-                val cfg = s.config ?: return@collectLatest
-                val title = when (s.status) {
-                    LinkStatus.DOWN -> "⚠ ${s.deviceName ?: cfg.target} NON RISPONDE"
-                    LinkStatus.STARTING -> "Avvio test ${cfg.target}…"
-                    else -> "${s.deviceName ?: cfg.target} · " + (s.stats.lastMs?.let { Format.ms(it) + " ms" } ?: "pacchetto perso")
-                }
-                val st = s.stats
-                val text = "Inviati ${st.sent} · Ricevuti ${st.received} · Persi ${st.lost} (${Format.percent(st.lossPercent)})" +
-                    (st.avgMs?.let { " · Media ${Format.ms(it)} ms" } ?: "") +
-                    if (cfg.mode == PingMode.CONTINUOUS) "" else " · ${st.sent}/${cfg.count}"
+                val (title, text) = if (m.running) multiText(m) else singleText(s) ?: return@collectLatest
                 getSystemService(NotificationManager::class.java).notify(NOTIF_ID, build(title, text))
             }
         }
         return START_NOT_STICKY
+    }
+
+    private fun singleText(s: SessionState): Pair<String, String>? {
+        val cfg = s.config ?: return null
+        val title = when (s.status) {
+            LinkStatus.DOWN -> "⚠ ${s.deviceName ?: cfg.target} NON RISPONDE"
+            LinkStatus.STARTING -> "Avvio test ${cfg.target}…"
+            else -> "${s.deviceName ?: cfg.target} · " + (s.stats.lastMs?.let { Format.ms(it) + " ms" } ?: "pacchetto perso")
+        }
+        val st = s.stats
+        val text = "Inviati ${st.sent} · Ricevuti ${st.received} · Persi ${st.lost} (${Format.percent(st.lossPercent)})" +
+            (st.avgMs?.let { " · Media ${Format.ms(it)} ms" } ?: "") +
+            if (cfg.mode == PingMode.CONTINUOUS) "" else " · ${st.sent}/${cfg.count}"
+        return title to text
+    }
+
+    private fun multiText(m: MultiState): Pair<String, String> {
+        val down = m.targets.filter { it.health == TargetState.Health.DOWN }
+        val title = if (down.isNotEmpty()) "⚠ ${down.size} di ${m.targets.size} schede NON RISPONDONO"
+        else "${m.groupName ?: "Più schede"} · ${m.targets.size} schede"
+        val text = "Rispondono ${m.okCount} · Instabili ${m.warnCount} · Non rispondono ${m.downCount}" +
+            (if (down.isNotEmpty()) "\nNon rispondono: " + down.take(6).joinToString(", ") { it.label } + (if (down.size > 6) "…" else "") else "")
+        return title to text
     }
 
     private fun build(title: String, text: String): Notification {

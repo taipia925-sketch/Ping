@@ -48,6 +48,8 @@ import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryDetailScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.MultiScreen
+import it.pingpro.app.ui.screens.MultiEditScreen
 import it.pingpro.app.ui.screens.LabScreen
 import it.pingpro.app.ui.screens.QuizScreen
 import it.pingpro.app.ui.screens.DiagnosisScreen
@@ -79,6 +81,8 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     val history by vm.history.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val network by vm.network.collectAsStateWithLifecycle()
+    val multi by vm.multi.collectAsStateWithLifecycle()
+    val groups by vm.groups.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val toast: (String) -> Unit = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
 
@@ -139,8 +143,9 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                             selected = currentRoute == t.route,
                             onClick = { goTab(t.route) },
                             icon = {
-                                if (t.route == "test" && session.running && currentRoute != "test") {
-                                    BadgedBox(badge = { Badge(containerColor = if (session.status == LinkStatus.DOWN) Palette.Red else Palette.Green) }) {
+                                if (t.route == "test" && (session.running || multi.running) && currentRoute != "test") {
+                                    val bad = session.status == LinkStatus.DOWN || (multi.running && multi.downCount > 0)
+                                    BadgedBox(badge = { Badge(containerColor = if (bad) Palette.Red else Palette.Green) }) {
                                         Icon(t.icon, t.label)
                                     }
                                 } else Icon(t.icon, t.label)
@@ -161,6 +166,22 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
             NavHost(nav, startDestination = "test",
                 enterTransition = { fadeIn() }, exitTransition = { fadeOut() }) {
                 composable("test") {
+                    if (vm.multiMode) {
+                        MultiScreen(
+                            state = multi, targets = vm.multiTargets, listName = vm.multiName, groups = groups,
+                            runMode = vm.multiRunMode, settings = settings, singleRunning = session.running,
+                            onRunMode = { vm.multiRunMode = it },
+                            onSwitchSingle = { vm.multiMode = false },
+                            onEdit = { nav.navigate("multi/edit") },
+                            onLoadGroup = { vm.loadGroup(it) },
+                            onStart = { startTest(); vm.startMulti() },
+                            onStop = { vm.stopMulti() },
+                            onOpenSettings = { nav.navigate("settings") },
+                            onPingSingle = { addr -> vm.multiMode = false; vm.target = addr },
+                            onCopy = { Export.copy(context, "Risultati PING", Export.multiReport(multi)); toast("Riepilogo copiato negli appunti") },
+                            onShare = { csv -> Export.shareMulti(context, multi, csv) },
+                        )
+                    } else {
                     TestScreen(
                         vm = vm, session = session, devices = devices, history = history, settings = settings,
                         onOpenSettings = { nav.navigate("settings") },
@@ -173,7 +194,10 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                         onStartRequested = startTest,
                         lan = network.firstOrNull { it.isLan && it.ipv4 != null },
                         onOpenNetwork = { goTab("network") },
+                        onSwitchMulti = { vm.multiMode = true },
+                        multiRunning = multi.running,
                     )
+                    }
                 }
                 composable("network") {
                     // Aggiorna periodicamente (segnale Wi-Fi) mentre la schermata è visibile.
@@ -182,8 +206,8 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                     }
                     NetworkScreen(
                         interfaces = network, running = session.running,
-                        onPing = { addr -> startTest(); vm.pingNow(addr); goTab("test") },
-                        onUse = { addr -> if (!session.running) vm.target = addr; goTab("test") },
+                        onPing = { addr -> if (!vm.anyRunning) vm.multiMode = false; startTest(); vm.pingNow(addr); goTab("test") },
+                        onUse = { addr -> if (!vm.anyRunning) { vm.multiMode = false; vm.target = addr }; goTab("test") },
                         onRefresh = { vm.refreshNetwork(); toast("Configurazione aggiornata") },
                         onCopy = { txt -> Export.copy(context, "ipconfig", txt); toast("Configurazione copiata negli appunti") },
                     )
@@ -191,7 +215,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                 composable("devices") {
                     DevicesScreen(
                         devices = devices, history = history, running = session.running,
-                        onPing = { d -> vm.target = d.address; startTest(); vm.start(); goTab("test") },
+                        onPing = { d -> vm.multiMode = false; vm.target = d.address; startTest(); vm.start(); goTab("test") },
                         onEdit = { draft = it },
                         onDelete = { deleting = it },
                     )
@@ -212,6 +236,18 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                         onOpenLab = { nav.navigate("lab") },
                         onOpenQuiz = { nav.navigate("quiz") },
                         onOpenDiagnosis = { nav.navigate("diagnosis") },
+                    )
+                }
+                composable("multi/edit") {
+                    MultiEditScreen(
+                        targets = vm.multiTargets, listName = vm.multiName, devices = devices, groups = groups,
+                        lan = network.firstOrNull { it.isLan && it.ipv4 != null },
+                        onChange = { list, name -> vm.setMultiList(list, name) },
+                        onSaveGroup = { vm.saveGroup(it) },
+                        onLoadGroup = { vm.loadGroup(it) },
+                        onDeleteGroup = { vm.deleteGroup(it.id) },
+                        onBack = { nav.popBackStack() },
+                        toast = toast,
                     )
                 }
                 composable("lab") { LabScreen(onBack = { nav.popBackStack() }) }

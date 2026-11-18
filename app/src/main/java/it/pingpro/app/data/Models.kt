@@ -51,6 +51,9 @@ data class TestSummary(
     val outages: Int,
     val network: String?,
     val engine: String?,
+    /** Test eseguiti insieme (più schede) condividono lo stesso batchId. */
+    val batchId: String? = null,
+    val batchName: String? = null,
 ) {
     val lost: Int get() = sent - received
     val lossPercent: Double get() = if (sent > 0) lost * 100.0 / sent else 0.0
@@ -65,6 +68,7 @@ data class TestSummary(
         .put("minMs", minMs ?: JSONObject.NULL).put("avgMs", avgMs ?: JSONObject.NULL)
         .put("maxMs", maxMs ?: JSONObject.NULL).put("jitterMs", jitterMs ?: JSONObject.NULL)
         .put("outages", outages).put("network", network ?: JSONObject.NULL).put("engine", engine ?: JSONObject.NULL)
+        .put("batchId", batchId ?: JSONObject.NULL).put("batchName", batchName ?: JSONObject.NULL)
 
     companion object {
         private fun JSONObject.optDoubleOrNull(k: String): Double? = if (isNull(k) || !has(k)) null else getDouble(k)
@@ -81,6 +85,7 @@ data class TestSummary(
             minMs = o.optDoubleOrNull("minMs"), avgMs = o.optDoubleOrNull("avgMs"),
             maxMs = o.optDoubleOrNull("maxMs"), jitterMs = o.optDoubleOrNull("jitterMs"),
             outages = o.optInt("outages"), network = o.optStringOrNull("network"), engine = o.optStringOrNull("engine"),
+            batchId = o.optStringOrNull("batchId"), batchName = o.optStringOrNull("batchName"),
         )
     }
 }
@@ -141,3 +146,23 @@ data class AppSettings(
     val keepScreenOn: Boolean = true,
     val onboardingDone: Boolean = false,
 )
+
+/** Una scheda da controllare nel test di più schede. */
+data class MultiTarget(val address: String, val name: String? = null) {
+    fun toJson(): JSONObject = JSONObject().put("a", address).put("n", name ?: JSONObject.NULL)
+    companion object {
+        fun fromJson(o: JSONObject) = MultiTarget(o.getString("a"), if (o.isNull("n")) null else o.optString("n"))
+    }
+}
+
+/** Gruppo salvato di schede, ad esempio tutte le schede di un apparato. */
+data class TargetGroup(val id: String, val name: String, val targets: List<MultiTarget>) {
+    fun toJson(): JSONObject = JSONObject().put("id", id).put("name", name)
+        .put("targets", JSONArray().apply { targets.forEach { put(it.toJson()) } })
+    companion object {
+        fun fromJson(o: JSONObject): TargetGroup {
+            val a = o.optJSONArray("targets") ?: JSONArray()
+            return TargetGroup(o.getString("id"), o.getString("name"), (0 until a.length()).map { MultiTarget.fromJson(a.getJSONObject(it)) })
+        }
+    }
+}

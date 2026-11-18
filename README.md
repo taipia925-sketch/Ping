@@ -8,13 +8,15 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ![Rete / ipconfig](docs/screenshots/network.png)
 
+![Più schede insieme](docs/screenshots/multi.png)
+
 ![Guida interattiva](docs/screenshots/guide.png)
 
 ---
 
 ## 1. Installazione sul Samsung Galaxy (S26 Ultra o altri)
 
-1. Scarica sul telefono il file **[`release/PingPro-1.2.0.apk`](release/PingPro-1.2.0.apk)**
+1. Scarica sul telefono il file **[`release/PingPro-1.3.0.apk`](release/PingPro-1.3.0.apk)**
    (da GitHub: apri il file → pulsante **Download raw file**).
 2. Apri il file scaricato (dalla notifica del download oppure da **Archivio › Download**).
 3. Alla prima installazione Android chiede di autorizzare la fonte:
@@ -49,6 +51,7 @@ ha un'icona **?** con una spiegazione breve.
 | Funzione | Dettaglio |
 |---|---|
 | Test singolo / continuativo | Equivalenti a `ping` e `ping -t` |
+| **Più schede insieme** | Fino a 100 schede in parallelo, ognuna con il proprio ping (come più finestre `ping`/`ping -t` aperte insieme). Elenco da schede salvate, intervallo di indirizzi o testo incollato (anche `192.168.1.10-20`); gruppi salvati con il nome dell'apparato; contatori rispondono/instabili/non rispondono, schede con problemi in cima, dettaglio per scheda; riepilogo copiabile/esportabile; nello storico un blocco unico per test |
 | **Rete (ipconfig)** | IPv4 del telefono, subnet mask, **gateway predefinito**, intervallo indirizzi della rete, DNS, server DHCP, segnale/velocità/banda Wi-Fi, MTU. Pulsante **PING GATEWAY**, vista "Prompt" identica a `ipconfig` / `ipconfig /all` copiabile |
 | Risultati in tempo reale | Latenza attuale, media, minima, massima, jitter, inviati, ricevuti, persi, % perdita |
 | Stato connessione | Online / Lenta / Instabile / **Non risponde** con avviso a vibrazione (e suono opzionale) |
