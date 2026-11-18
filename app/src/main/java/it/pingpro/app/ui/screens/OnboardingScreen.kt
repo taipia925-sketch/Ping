@@ -64,8 +64,8 @@ fun OnboardingScreen(onDone: () -> Unit) {
     val pages = listOf(
         Page("Il PING di Windows,\nora sul telefono",
             "Verifica in un attimo se una scheda elettronica comunica in rete. Stesse richieste ICMP del Prompt dei comandi, risultati reali misurati dal tuo telefono.") { PulseArt() },
-        Page("1. Scrivi l'indirizzo",
-            "Collega il telefono al Wi-Fi della scheda e scrivi il suo indirizzo IP. Puoi salvarlo con un nome per ritrovarlo con un tocco.") { AddressArt() },
+        Page("1. Scegli l'indirizzo",
+            "Collega il telefono al Wi-Fi della scheda. Il gateway predefinito (come in ipconfig) è già pronto con un tocco; oppure scrivi l'IP della scheda e salvalo con un nome.") { AddressArt() },
         Page("2. Singolo o continuo",
             "Singolo invia 4 richieste come \"ping\". Continuo va avanti finché non premi Interrompi, come \"ping -t\".") { ModeArt() },
         Page("3. Capisci tutto a colpo d'occhio",
@@ -140,8 +140,8 @@ private fun AddressArt() {
         }
         Spacer(Modifier.height(14.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Pill("Quadro linea 3", Palette.Teal)
-            Pill("Inverter A", Palette.AccentSoft)
+            Pill("Gateway 192.168.1.1", Palette.Teal)
+            Pill("Quadro linea 3", Palette.AccentSoft)
         }
         Spacer(Modifier.height(18.dp))
         Text("C:\\> ping 192.168.1.100", fontFamily = Mono, color = Palette.TextFaint, fontSize = 14.sp)

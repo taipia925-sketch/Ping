@@ -33,6 +33,8 @@ import it.pingpro.app.ui.TestUi
 import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.NetworkScreen
+import it.pingpro.app.ping.NetInterfaceInfo
 import it.pingpro.app.ui.screens.OnboardingScreen
 import it.pingpro.app.ui.screens.SettingsScreen
 import it.pingpro.app.ui.screens.TestScreen
@@ -65,6 +67,10 @@ class ScreensSnapshotTest {
         SavedDevice("2", "Inverter A", "192.168.1.120", "", lastUsedAt = 2),
         SavedDevice("3", "PLC ingresso", "192.168.1.15", "Sopra la porta carraia"),
     )
+    private val wifi = NetInterfaceInfo("Wi-Fi", "wlan0", false, false, "192.168.1.23", 24, "192.168.1.1",
+        ipv6 = listOf("fe80::1c2b:3aff:fe4d:5e6f"), dns = listOf("192.168.1.1"), dhcpServer = "192.168.1.1",
+        wifiRssi = -58, linkSpeedMbps = 866, frequencyMHz = 5180, mtu = 1500)
+    private val cell = NetInterfaceInfo("Dati mobili", "rmnet_data0", true, true, "10.142.33.7", 30, null)
     private val net = NetworkChoice(null, "Wi-Fi", "wlan0", "192.168.1.23", 24, true)
 
     private fun session(n: Int, lossAt: Set<Int>, status: LinkStatus? = null, running: Boolean = true, mode: PingMode = PingMode.CONTINUOUS): SessionState {
@@ -100,7 +106,7 @@ class ScreensSnapshotTest {
     }
 
     private fun test(s: SessionState, mode: PingMode = PingMode.CONTINUOUS, history: List<TestSummary> = emptyList()) = pages(4) {
-        TestScreen(FakeUi("192.168.1.100", mode, devices), s, devices, history, AppSettings(), {}, {}, {}, {})
+        TestScreen(FakeUi("192.168.1.100", mode, devices), s, devices, history, AppSettings(), {}, {}, {}, {}, lan = wifi)
     }
 
     @Test fun test_idle() = test(SessionState())
@@ -114,6 +120,9 @@ class ScreensSnapshotTest {
             4, 32, 4000, 128, 1_700_000_000_000L - i * 7_200_000L, 1_700_000_000_000L - i * 7_200_000L + 4000L * (i + 1),
             4 * (i + 1), if (i == 4) 0 else 4 * (i + 1) - (i % 3), 0.8, 2.4 + i, 9.0, 1.1, 0, "Wi-Fi", "Socket ICMP nativo")
     }
+
+    @Test fun network() = pages(2) { NetworkScreen(listOf(wifi, cell), false, {}, {}, {}, {}) }
+    @Test fun network_none() = shot { NetworkScreen(listOf(cell), false, {}, {}, {}, {}) }
 
     @Test fun history() = shot { HistoryScreen(hist, {}, { _, _ -> }, {}) }
     @Test fun devices() = shot { DevicesScreen(devices, hist, false, {}, {}, {}) }

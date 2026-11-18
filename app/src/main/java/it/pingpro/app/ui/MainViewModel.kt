@@ -31,8 +31,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app), TestUi {
     val devices = pa.devices.devices
     val history = pa.history.items
     val settings = pa.settings.settings
+    val network = pa.network.interfaces
 
-    override var target by mutableStateOf(pa.settings.lastTarget())
+    fun refreshNetwork() = pa.network.refresh()
+
+    /** Avvia subito un test verso un indirizzo (es. il gateway) senza doverlo scrivere. */
+    fun pingNow(address: String) {
+        if (session.value.running) return
+        target = address
+        start()
+    }
+
+    override var target by mutableStateOf(pa.settings.lastTarget().ifBlank { pa.network.primaryLan?.gateway ?: "" })
     override var mode by mutableStateOf(PingMode.SINGLE)
 
     override val targetValid: Boolean get() = NetworkResolver.isValidTarget(target)

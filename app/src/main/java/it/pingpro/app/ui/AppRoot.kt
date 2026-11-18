@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.DeveloperBoard
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.NetworkPing
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -37,6 +38,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import it.pingpro.app.data.Export
 import it.pingpro.app.ping.LinkStatus
 import it.pingpro.app.ui.screens.CompareScreen
 import it.pingpro.app.ui.screens.DeviceDraft
@@ -45,6 +47,7 @@ import it.pingpro.app.ui.screens.DevicesScreen
 import it.pingpro.app.ui.screens.GuideScreen
 import it.pingpro.app.ui.screens.HistoryDetailScreen
 import it.pingpro.app.ui.screens.HistoryScreen
+import it.pingpro.app.ui.screens.NetworkScreen
 import it.pingpro.app.ui.screens.OnboardingScreen
 import it.pingpro.app.ui.screens.SettingsScreen
 import it.pingpro.app.ui.screens.TestScreen
@@ -54,6 +57,7 @@ private data class Tab(val route: String, val label: String, val icon: ImageVect
 
 private val tabs = listOf(
     Tab("test", "Test", Icons.Outlined.NetworkPing),
+    Tab("network", "Rete", Icons.Outlined.Lan),
     Tab("devices", "Schede", Icons.Outlined.DeveloperBoard),
     Tab("history", "Storico", Icons.Outlined.History),
     Tab("guide", "Guida", Icons.AutoMirrored.Outlined.MenuBook),
@@ -66,6 +70,7 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     val devices by vm.devices.collectAsStateWithLifecycle()
     val history by vm.history.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
+    val network by vm.network.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val toast: (String) -> Unit = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
 
@@ -135,6 +140,21 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
                         },
                         toast = toast,
                         onStartRequested = startTest,
+                        lan = network.firstOrNull { it.isLan && it.ipv4 != null },
+                        onOpenNetwork = { goTab("network") },
+                    )
+                }
+                composable("network") {
+                    // Aggiorna periodicamente (segnale Wi-Fi) mentre la schermata è visibile.
+                    androidx.compose.runtime.LaunchedEffect(Unit) {
+                        while (true) { vm.refreshNetwork(); kotlinx.coroutines.delay(3000) }
+                    }
+                    NetworkScreen(
+                        interfaces = network, running = session.running,
+                        onPing = { addr -> startTest(); vm.pingNow(addr); goTab("test") },
+                        onUse = { addr -> if (!session.running) vm.target = addr; goTab("test") },
+                        onRefresh = { vm.refreshNetwork(); toast("Configurazione aggiornata") },
+                        onCopy = { txt -> Export.copy(context, "ipconfig", txt); toast("Configurazione copiata negli appunti") },
                     )
                 }
                 composable("devices") {

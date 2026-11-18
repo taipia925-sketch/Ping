@@ -6,11 +6,13 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ![Panoramica](docs/screenshots/overview.png)
 
+![Rete / ipconfig](docs/screenshots/network.png)
+
 ---
 
 ## 1. Installazione sul Samsung Galaxy (S26 Ultra o altri)
 
-1. Scarica sul telefono il file **[`release/PingPro-1.0.0.apk`](release/PingPro-1.0.0.apk)**
+1. Scarica sul telefono il file **[`release/PingPro-1.1.0.apk`](release/PingPro-1.1.0.apk)**
    (da GitHub: apri il file → pulsante **Download raw file**).
 2. Apri il file scaricato (dalla notifica del download oppure da **Archivio › Download**).
 3. Alla prima installazione Android chiede di autorizzare la fonte:
@@ -28,7 +30,8 @@ Requisiti: Android 8.0 o superiore.
 ## 2. Uso in 4 passi
 
 1. Collega il telefono al **Wi-Fi della scheda** (anche se quella rete non ha Internet).
-2. Scrivi l'**indirizzo IP** (es. `192.168.1.100`). Con l'icona segnalibro puoi salvarlo con un nome.
+2. Tocca **Gateway …** per usare il gateway predefinito (come lo trovi con `ipconfig`), scegli una
+   scheda salvata oppure scrivi l'**indirizzo IP** (es. `192.168.1.100`).
 3. Scegli **Singolo** (= `ping 192.168.1.100`, 4 richieste) o **Continuo** (= `ping -t 192.168.1.100`).
 4. Premi **AVVIA TEST**. Per fermare premi **INTERROMPI** (anche dalla notifica).
 
@@ -44,6 +47,7 @@ ha un'icona **?** con una spiegazione breve.
 | Funzione | Dettaglio |
 |---|---|
 | Test singolo / continuativo | Equivalenti a `ping` e `ping -t` |
+| **Rete (ipconfig)** | IPv4 del telefono, subnet mask, **gateway predefinito**, intervallo indirizzi della rete, DNS, server DHCP, segnale/velocità/banda Wi-Fi, MTU. Pulsante **PING GATEWAY**, vista "Prompt" identica a `ipconfig` / `ipconfig /all` copiabile |
 | Risultati in tempo reale | Latenza attuale, media, minima, massima, jitter, inviati, ricevuti, persi, % perdita |
 | Stato connessione | Online / Lenta / Instabile / **Non risponde** con avviso a vibrazione (e suono opzionale) |
 | Grafico latenza | Linea + media, barre rosse per i pacchetti persi, zone rosse per le interruzioni |

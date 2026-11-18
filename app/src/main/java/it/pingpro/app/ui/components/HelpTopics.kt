@@ -80,4 +80,30 @@ enum class HelpTopic(val title: String, val body: String) {
             "L'app sceglie automaticamente la rete che contiene l'indirizzo della scheda, anche se quel Wi-Fi non ha accesso a Internet, " +
             "così le richieste non vengono mai inviate tramite i dati mobili."
     ),
+    GATEWAY(
+        "Gateway predefinito",
+        "È l'indirizzo del router (o dell'apparato) attraverso cui passa il traffico della rete: lo stesso valore che leggi in \"Gateway predefinito\" con ipconfig su Windows.\n\n" +
+            "Fare il ping del gateway è il primo controllo: se risponde, il telefono è collegato correttamente alla rete. Se non risponde, il problema è nel collegamento Wi-Fi/rete, non nella scheda.\n\n" +
+            "Tocca \"Ping gateway\" per provarlo subito, oppure \"Usa\" per inserirlo come indirizzo da testare."
+    ),
+    PHONE_IP(
+        "Indirizzo IPv4 del telefono",
+        "L'indirizzo che il telefono ha ricevuto su questa rete. Le schede che puoi raggiungere direttamente hanno di solito le prime tre parti uguali (es. telefono 192.168.1.23 → schede 192.168.1.x)."
+    ),
+    SUBNET(
+        "Subnet mask",
+        "Indica quanto è grande la rete locale. Con 255.255.255.0 (/24) la rete va da x.x.x.1 a x.x.x.254: tutte le schede con indirizzo in questo intervallo sono sulla stessa rete del telefono e si raggiungono direttamente."
+    ),
+    DNS(
+        "Server DNS",
+        "Il servizio che traduce i nomi (es. scheda-01.local o www.sito.it) in indirizzi IP. Spesso coincide con il gateway."
+    ),
+    DHCP(
+        "Server DHCP",
+        "L'apparato che ha assegnato automaticamente l'indirizzo IP al telefono. Spesso è il router/gateway stesso."
+    ),
+    SIGNAL(
+        "Segnale Wi-Fi",
+        "Potenza del segnale ricevuto in dBm: più vicino a 0, migliore. Oltre -55 ottimo, fino a -67 buono, fino a -75 discreto, sotto -80 debole (possibili perdite e tempi alti)."
+    ),
 }

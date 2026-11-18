@@ -98,6 +98,7 @@ import it.pingpro.app.data.SavedDevice
 import it.pingpro.app.data.TestSummary
 import it.pingpro.app.ping.EventKind
 import it.pingpro.app.ping.LinkStatus
+import it.pingpro.app.ping.NetInterfaceInfo
 import it.pingpro.app.ping.PingEvent
 import it.pingpro.app.ping.PingMode
 import it.pingpro.app.ping.PingSample
@@ -132,6 +133,8 @@ fun TestScreen(
     onSaveDevice: (String) -> Unit,
     toast: (String) -> Unit,
     onStartRequested: () -> Unit = {},
+    lan: NetInterfaceInfo? = null,
+    onOpenNetwork: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val hasSession = session.status != LinkStatus.IDLE
@@ -152,7 +155,7 @@ fun TestScreen(
         }
 
         item {
-            TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice)
+            TargetCard(vm, session.running, devices, history, settings.count, onSaveDevice, lan, onOpenNetwork)
         }
 
         item {
@@ -205,12 +208,23 @@ private fun TargetCard(
     history: List<TestSummary>,
     count: Int,
     onSaveDevice: (String) -> Unit,
+    lan: NetInterfaceInfo?,
+    onOpenNetwork: () -> Unit,
 ) {
     val focus = LocalFocusManager.current
     val saved = vm.deviceFor(vm.target)
     val invalid = vm.target.isNotBlank() && !vm.targetValid
     AppCard {
-        SectionHeader("Indirizzo della scheda", help = HelpTopic.ADDRESS)
+        SectionHeader("Indirizzo della scheda", help = HelpTopic.ADDRESS) {
+            Row(
+                Modifier.clip(CircleShape).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Outlined.Lan, null, tint = Palette.AccentSoft, modifier = Modifier.size(15.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("ipconfig", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft)
+            }
+        }
         Spacer(Modifier.height(10.dp))
         val borderColor by animateColorAsState(if (invalid) Palette.Red.copy(alpha = 0.6f) else Palette.Outline, label = "b")
         Row(
@@ -270,9 +284,26 @@ private fun TargetCard(
             history.map { it.target }.distinctBy { it.lowercase() }.filter { it.lowercase() !in savedAddr }.take(6)
         }
         val chips = devices.sortedByDescending { it.lastUsedAt ?: it.createdAt }.map { it.name to it.address } + recent.map { it to it }
-        if (chips.isNotEmpty()) {
+        val gateway = lan?.gateway
+        if (chips.isNotEmpty() || gateway != null) {
             Spacer(Modifier.height(12.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (gateway != null) item(key = "gw") {
+                    val sel = gateway == vm.target
+                    Row(
+                        Modifier
+                            .clip(CircleShape)
+                            .background(if (sel) Palette.Teal.copy(alpha = 0.22f) else Palette.Teal.copy(alpha = 0.10f))
+                            .border(1.dp, Palette.Teal.copy(alpha = if (sel) 0.7f else 0.35f), CircleShape)
+                            .clickable(enabled = !running) { vm.target = gateway }
+                            .padding(horizontal = 14.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Outlined.Router, null, tint = Palette.Teal, modifier = Modifier.size(15.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Gateway $gateway", style = MaterialTheme.typography.labelMedium, color = Palette.Text)
+                    }
+                }
                 items(chips, key = { it.second + it.first }) { (label, addr) ->
                     val sel = addr.equals(vm.target, true)
                     Row(
@@ -704,7 +735,7 @@ private fun IdleHint() {
         Spacer(Modifier.height(10.dp))
         listOf(
             "1" to "Collega il telefono al Wi-Fi della scheda.",
-            "2" to "Scrivi l'indirizzo IP della scheda (es. 192.168.1.100).",
+            "2" to "Tocca \"Gateway\" per usare il gateway predefinito, oppure scrivi l'IP della scheda (es. 192.168.1.100).",
             "3" to "Scegli Singolo (4 richieste) o Continuo (fino a quando premi Interrompi).",
             "4" to "Premi AVVIA TEST e guarda i risultati in tempo reale.",
         ).forEach { (n, t) ->

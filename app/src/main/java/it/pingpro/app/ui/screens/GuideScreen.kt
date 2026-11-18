@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.automirrored.outlined.CompareArrows
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.School
@@ -115,7 +116,7 @@ fun GuideScreen(onStartTutorial: () -> Unit, onTryNow: () -> Unit) {
         item {
             GuideSection(Icons.Outlined.TouchApp, "Come eseguire un PING, passo dopo passo", Palette.Accent, initiallyOpen = true) {
                 Step(1, "Collega il telefono alla rete della scheda", "Apri le impostazioni Wi-Fi del Samsung e collegati alla stessa rete a cui è collegata la scheda (anche se quella rete non ha Internet).")
-                Step(2, "Scrivi l'indirizzo IP", "Nella schermata Test tocca il campo indirizzo e digita l'IP, ad esempio 192.168.1.100. Se lo usi spesso, tocca l'icona segnalibro per salvarlo con un nome.")
+                Step(2, "Scegli l'indirizzo", "Tocca il pulsante \"Gateway …\" per usare il gateway predefinito (come lo trovi con ipconfig), scegli una scheda salvata, oppure scrivi l'IP, ad esempio 192.168.1.100. Con l'icona segnalibro lo salvi con un nome.")
                 Step(3, "Scegli la modalità", "Singolo = 4 richieste e stop (come \"ping 192.168.1.100\"). Continuo = va avanti finché non premi Interrompi (come \"ping -t 192.168.1.100\").")
                 Step(4, "Premi AVVIA TEST", "Ogni secondo parte una richiesta. Lo stato in alto diventa verde se la scheda risponde, rosso se non risponde.")
                 Step(5, "Leggi il risultato", "Guarda Latenza media e Perdita. 0% persi e pochi millisecondi = comunicazione perfetta.")
@@ -123,6 +124,16 @@ fun GuideScreen(onStartTutorial: () -> Unit, onTryNow: () -> Unit) {
                 Spacer(Modifier.height(4.dp))
                 Text("Prova ora →", style = MaterialTheme.typography.labelLarge, color = Palette.AccentSoft,
                     modifier = Modifier.clip(CircleShape).clickable(onClick = onTryNow).padding(horizontal = 12.dp, vertical = 8.dp))
+            }
+        }
+
+        item {
+            GuideSection(Icons.Outlined.Lan, "Trovare il gateway e gli indirizzi (ipconfig)", Palette.Teal) {
+                Para("Dove si trova", "Tocca la scheda Rete nella barra in basso (oppure il pulsante \"ipconfig\" accanto all'indirizzo nella schermata Test). Vedi gli stessi dati del comando ipconfig di Windows: indirizzo IPv4 del telefono, subnet mask e gateway predefinito, più DNS, server DHCP e segnale Wi-Fi.")
+                Para("Ping del gateway con un tocco", "Il gateway predefinito è in evidenza: premi PING GATEWAY per avviare subito il test, senza scrivere nulla. Nella schermata Test il gateway compare anche come scelta rapida (pulsante verde \"Gateway …\").")
+                Para("Perché è utile", "Se il gateway risponde, il telefono è collegato bene alla rete. Se il gateway risponde ma la scheda no, il problema è nella scheda o nel suo cavo. Se non risponde nemmeno il gateway, il problema è nel Wi-Fi o nella rete.")
+                Para("Vista Prompt", "Mostra i dati esattamente come la finestra nera di Windows (ipconfig e ipconfig /all) e permette di copiarli.")
+                Para("Indirizzi della rete", "Indica l'intervallo di indirizzi della rete del telefono (es. 192.168.1.1 – 192.168.1.254): le schede con un indirizzo in questo intervallo si raggiungono direttamente.")
             }
         }
 
