@@ -4,6 +4,9 @@ App Android per verificare la comunicazione con le schede elettroniche in rete, 
 richieste **ICMP Echo** del comando `ping` di Windows, eseguite **realmente dal telefono** sulla
 rete Wi-Fi/Ethernet a cui è collegato.
 
+> **Versione per PC Windows:** scarica [`release/PingPro-PC.exe`](release/PingPro-PC.exe) — vedi la sezione [Versione per PC](#versione-per-pc-windows).
+
+
 ![Panoramica](docs/screenshots/overview.png)
 
 ![Rete / ipconfig](docs/screenshots/network.png)
@@ -148,3 +151,30 @@ Richiede JDK 17+ e Android SDK (platform 35).
 L'APK di release è firmato con la chiave inclusa (`app/pingpro-release.jks`), così le versioni
 future si installano come aggiornamento senza disinstallare l'app. Per una distribuzione pubblica
 sostituirla con una chiave privata.
+
+
+## Versione per PC (Windows)
+
+`release/PingPro-PC.exe` – un solo file, nessuna installazione, Windows 10/11 a 64 bit.
+
+1. Scarica `PingPro-PC.exe` (per esempio sul Desktop) e fai doppio clic.
+2. Se compare «Windows ha protetto il PC» (SmartScreen): **Ulteriori informazioni › Esegui comunque**.
+   Succede con tutti i programmi non firmati digitalmente; si chiede solo la prima volta.
+3. Si apre la finestra di PingPro (usa Microsoft Edge in modalità app). Chiudendo la finestra il programma termina.
+
+Funzioni: Test singolo (`ping`) e continuo (`ping -t`), Più schede (fino a 100), Rete (ipconfig con vista grafica e vista
+Prompt), Cerca dispositivi con «Pinga tutti», Schede salvate, Storico con esportazione .txt/.csv, Guida.
+Il ping usa `IcmpSendEcho` di `iphlpapi.dll`, la stessa funzione di `ping.exe`: non servono privilegi di amministratore.
+I dati sono salvati in `%APPDATA%\PingPro`. Il programma ascolta solo su `127.0.0.1` (nessun accesso dalla rete) con una chiave casuale a ogni avvio.
+
+![PC – Test](docs/screenshots/pc-test.png)
+
+![PC – Più schede](docs/screenshots/pc-multi.png)
+
+Sorgente in `desktop/` (Go 1.24). Compilazione:
+
+```
+cd desktop
+go test ./...
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags "-H windowsgui -s -w" -o ../release/PingPro-PC.exe .
+```
