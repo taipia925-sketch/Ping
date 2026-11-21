@@ -51,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.foundation.clickable
@@ -73,6 +74,7 @@ import it.pingpro.app.ui.components.LatencyChart
 import it.pingpro.app.ui.components.Pill
 import it.pingpro.app.ui.components.SectionHeader
 import it.pingpro.app.ui.components.StatTile
+import it.pingpro.app.ui.components.screenHeader
 import it.pingpro.app.ui.theme.Palette
 import it.pingpro.app.ui.theme.latencyColor
 
@@ -107,7 +109,7 @@ fun HistoryScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().screenHeader(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Storico", style = MaterialTheme.typography.headlineLarge)
                     Text(
@@ -260,7 +262,9 @@ private fun BatchCard(group: List<TestSummary>, open: Boolean, onToggle: () -> U
 
 @Composable
 fun BackHeader(title: String, subtitle: String?, onBack: () -> Unit, actions: @Composable () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 8.dp)
+        .drawBehind { drawRect(Palette.Outline, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - 1.dp.toPx()), size = androidx.compose.ui.geometry.Size(size.width, 1.dp.toPx())) }
+        .padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Indietro") }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

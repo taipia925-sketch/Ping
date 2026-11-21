@@ -64,6 +64,7 @@ import it.pingpro.app.ui.components.LatencyAnimation
 import it.pingpro.app.ui.components.Pill
 import it.pingpro.app.ui.components.Sparkline
 import it.pingpro.app.ui.theme.Mono
+import it.pingpro.app.ui.components.screenHeader
 import it.pingpro.app.ui.theme.Palette
 
 private data class Example(val title: String, val verdict: String, val color: Color, val values: List<Double?>, val text: String)
@@ -106,7 +107,7 @@ fun GuideScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Column(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp)) {
+            Column(Modifier.fillMaxWidth().screenHeader()) {
                 Text("Guida", style = MaterialTheme.typography.headlineLarge)
                 Text("Impara facendo: prova, sbaglia, capisci", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
             }

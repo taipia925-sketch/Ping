@@ -18,6 +18,13 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -219,16 +226,93 @@ fun PressScale(pressed: Boolean): Float {
     return s
 }
 
+/**
+ * Schermata vuota: riquadro tratteggiato (come uno spazio da compilare su un modulo),
+ * icona, titolo, spiegazione e un'azione facoltativa.
+ */
 @Composable
-fun EmptyState(icon: ImageVector, title: String, text: String, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().padding(vertical = 48.dp, horizontal = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        IconBadge(icon, Palette.AccentSoft, size = 64.dp)
+fun EmptyState(icon: ImageVector, title: String, text: String, modifier: Modifier = Modifier,
+               actionLabel: String? = null, onAction: (() -> Unit)? = null) {
+    val dash = Palette.OutlineStrong.copy(alpha = 0.35f)
+    Column(
+        modifier.fillMaxWidth().padding(top = 8.dp)
+            .drawBehind {
+                drawRoundRect(dash, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx(),
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()))),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()))
+            }
+            .padding(vertical = 36.dp, horizontal = 28.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        IconBadge(icon, Palette.Text, size = 56.dp)
         Spacer(Modifier.height(16.dp))
-        Text(title, style = MaterialTheme.typography.titleLarge)
+        Text(title, style = MaterialTheme.typography.titleLarge, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         Spacer(Modifier.height(6.dp))
         Text(text, style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        if (actionLabel != null && onAction != null) {
+            Spacer(Modifier.height(18.dp))
+            Box(Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Accent).clickable(onClick = onAction).padding(horizontal = 20.dp, vertical = 12.dp)) {
+                Text(actionLabel, style = MaterialTheme.typography.labelLarge, color = Palette.OnAccent)
+            }
+        }
     }
 }
 
 @Suppress("unused")
 fun Modifier.pressScale(scale: Float) = this.scale(scale)
+
+
+/**
+ * Intestazione delle schermate principali: titolo, sottotitolo, azioni a destra e il filetto
+ * d'inchiostro sotto, come l'intestazione di una scheda tecnica.
+ */
+fun Modifier.screenHeader(): Modifier = this
+    .statusBarsPadding()
+    .padding(top = 18.dp, start = 2.dp)
+    .drawBehind {
+        val h = 2.dp.toPx()
+        drawRect(Palette.OutlineStrong, topLeft = androidx.compose.ui.geometry.Offset(0f, size.height - h),
+            size = androidx.compose.ui.geometry.Size(size.width, h))
+    }
+    .padding(bottom = 12.dp)
+
+/** Titolo di un riquadro: maiuscoletto spaziato, come le voci di un modulo tecnico. */
+@Composable
+fun PanelTitle(text: String, modifier: Modifier = Modifier, color: Color = Palette.TextDim) {
+    Text(text.uppercase(), modifier = modifier, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
+        letterSpacing = 1.4.sp, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+}
+
+/** Pulsante a icona quadrato con filetto: sostituisce i pulsanti tondi di Material. */
+@Composable
+fun SquareIconButton(
+    icon: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    filled: Boolean = false,
+    tint: Color = if (filled) Palette.OnAccent else Palette.Text,
+    size: Dp = 40.dp,
+) {
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val bg = when {
+        filled && enabled -> Palette.Accent
+        pressed -> Palette.Surface3
+        else -> Palette.Surface
+    }
+    Box(
+        modifier
+            .size(size)
+            .scale(PressScale(pressed))
+            .clip(RoundedCornerShape(4.dp))
+            .background(bg)
+            .border(1.dp, if (filled && enabled) Palette.Accent else if (enabled) Palette.OutlineStrong.copy(alpha = 0.55f) else Palette.Outline, RoundedCornerShape(4.dp))
+            .clickable(interactionSource = interaction, indication = null, enabled = enabled, onClick = onClick)
+            .semantics { if (contentDescription != null) this.contentDescription = contentDescription; role = Role.Button },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, null, tint = if (enabled) tint else Palette.TextFaint, modifier = Modifier.size(size * 0.5f))
+    }
+}

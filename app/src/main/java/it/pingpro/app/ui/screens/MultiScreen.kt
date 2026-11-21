@@ -60,6 +60,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -84,6 +86,8 @@ import it.pingpro.app.ui.components.SectionHeader
 import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.components.tourTarget
 import it.pingpro.app.ui.theme.Mono
+import it.pingpro.app.ui.components.screenHeader
+import it.pingpro.app.ui.components.PanelTitle
 import it.pingpro.app.ui.theme.Palette
 import it.pingpro.app.ui.theme.latencyColor
 import kotlinx.coroutines.delay
@@ -162,7 +166,7 @@ fun MultiScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 22.dp, start = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().screenHeader(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(if (hasRun) (state.groupName ?: "Più schede") else "Test", style = MaterialTheme.typography.headlineLarge,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -259,7 +263,7 @@ fun MultiScreen(
             if (!state.running) item { MultiSummary(state) }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 4.dp)) {
-                    Text("Schede", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    PanelTitle("Schede", Modifier.weight(1f))
                     Text(if (sortProblems) "Problemi prima" else "Ordine elenco", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
                         modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable { sortProblems = !sortProblems }.padding(horizontal = 12.dp, vertical = 7.dp))
                 }
@@ -343,7 +347,7 @@ private fun MultiSummary(m: MultiState) {
             Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
                 val track = Palette.Surface2; val g = Palette.Green; val a = Palette.Amber; val r = Palette.Red
                 Canvas(Modifier.fillMaxSize()) {
-                    val sw = 11.dp.toPx()
+                    val sw = 9.dp.toPx()
                     val inset = sw / 2
                     val arc = androidx.compose.ui.geometry.Size(size.width - sw, size.height - sw)
                     val tl = androidx.compose.ui.geometry.Offset(inset, inset)
@@ -352,8 +356,18 @@ private fun MultiSummary(m: MultiState) {
                     listOf(m.okCount to g, m.warnCount to a, m.downCount to r).forEach { (n, c) ->
                         if (n > 0) {
                             val sweep = 360f * n / total
-                            drawArc(c, start + 1.5f, (sweep - 3f).coerceAtLeast(1f), false, tl, arc, style = Stroke(sw, cap = StrokeCap.Round))
+                            drawArc(c, start + 1f, (sweep - 2f).coerceAtLeast(1f), false, tl, arc, style = Stroke(sw, cap = StrokeCap.Butt))
                             start += sweep
+                        }
+                    }
+                    // Tacche di una scala graduata: una per scheda (fino a 40), come su uno strumento.
+                    if (total in 2..40) {
+                        val rOut = size.minDimension / 2; val rIn = rOut - sw
+                        for (k in 0 until total) {
+                            val ang = Math.toRadians((-90.0 + 360.0 * k / total))
+                            val cx = center.x; val cy = center.y
+                            drawLine(Palette.Surface, androidx.compose.ui.geometry.Offset(cx + (rIn * kotlin.math.cos(ang)).toFloat(), cy + (rIn * kotlin.math.sin(ang)).toFloat()),
+                                androidx.compose.ui.geometry.Offset(cx + (rOut * kotlin.math.cos(ang)).toFloat(), cy + (rOut * kotlin.math.sin(ang)).toFloat()), 1.5.dp.toPx())
                         }
                     }
                 }
@@ -389,7 +403,7 @@ private fun MultiSummary(m: MultiState) {
 @Composable
 private fun LegendLine(color: Color, text: String, strong: Boolean) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(10.dp).clip(CircleShape).background(color))
+        Box(Modifier.size(10.dp).background(color))
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.typography.titleSmall, color = if (strong) (if (color == Palette.Red) Palette.Red else Palette.Text) else Palette.TextDim,
             fontWeight = if (strong) FontWeight.ExtraBold else FontWeight.SemiBold)
@@ -405,11 +419,12 @@ private fun TargetRow(t: TargetState, settings: AppSettings, last: Boolean, onCl
         TargetState.Health.DOWN -> Palette.DangerBg
         TargetState.Health.WAITING -> Palette.Surface2
     }
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(38.dp).clip(RoundedCornerShape(4.dp)).background(bg), contentAlignment = Alignment.Center) {
-                Box(Modifier.size(10.dp).clip(CircleShape).background(c))
-            }
+    val rowBg by animateColorAsState(if (t.health == TargetState.Health.DOWN) Palette.Red.copy(alpha = 0.06f) else Color.Transparent, label = "rowBg")
+    Column(Modifier.fillMaxWidth().background(rowBg).clickable(onClick = onClick)) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 11.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Barra di stato verticale: si legge a colpo d'occhio scorrendo l'elenco.
+            val barC by animateColorAsState(c, label = "bar")
+            Box(Modifier.width(4.dp).height(38.dp).background(if (t.health == TargetState.Health.WAITING) Palette.Surface3 else barC))
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(t.label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -420,6 +435,11 @@ private fun TargetRow(t: TargetState, settings: AppSettings, last: Boolean, onCl
                 )
             }
             Spacer(Modifier.width(8.dp))
+            // Ultimi 10 pacchetti in miniatura.
+            if (t.recent.isNotEmpty()) {
+                PacketStrip(t.recent, Modifier.width(54.dp), slots = 10, highLatency = settings.highLatencyMs, height = 14.dp)
+                Spacer(Modifier.width(10.dp))
+            }
             val lastS = t.recent.lastOrNull()
             when {
                 t.error != null -> Text("Errore", style = MaterialTheme.typography.titleSmall, color = Palette.Red)
@@ -439,7 +459,8 @@ private fun TargetRow(t: TargetState, settings: AppSettings, last: Boolean, onCl
 private fun MsValue(v: Double, settings: AppSettings, caption: String?) {
     Column(horizontalAlignment = Alignment.End) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(Format.ms(v), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, fontFamily = it.pingpro.app.ui.theme.Sans,
+            Text(Format.ms(v), fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = it.pingpro.app.ui.theme.Sans,
+                style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"),
                 color = if (v >= settings.highLatencyMs) Palette.Amber else Palette.Text)
             Text(" ms", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 2.dp))
         }

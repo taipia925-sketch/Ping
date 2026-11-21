@@ -25,6 +25,7 @@ import it.pingpro.app.data.UpdateInfo
 import it.pingpro.app.data.UpdateState
 import it.pingpro.app.ui.Format
 import it.pingpro.app.ui.components.AppCard
+import it.pingpro.app.ui.components.PanelTitle
 import it.pingpro.app.ui.theme.Palette
 import java.util.Locale
 
@@ -121,7 +122,7 @@ fun UpdateDialog(
 @Composable
 fun UpdateSettingsCard(state: UpdateState, currentVersion: String, lastCheck: Long, onCheck: () -> Unit, onDownload: (UpdateInfo) -> Unit) {
     AppCard {
-        Text("Aggiornamenti", style = MaterialTheme.typography.titleMedium)
+        PanelTitle("Aggiornamenti")
         Spacer(Modifier.height(4.dp))
         Text("Versione installata: $currentVersion", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
         Spacer(Modifier.height(8.dp))

@@ -77,6 +77,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
@@ -122,6 +123,8 @@ import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.components.StatTile
 import it.pingpro.app.ui.components.tourTarget
 import it.pingpro.app.ui.theme.Mono
+import it.pingpro.app.ui.components.screenHeader
+import it.pingpro.app.ui.components.PanelTitle
 import it.pingpro.app.ui.theme.Palette
 import it.pingpro.app.ui.theme.latencyColor
 import it.pingpro.app.ui.theme.statusColor
@@ -166,7 +169,7 @@ fun TestScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 22.dp, start = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().screenHeader(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Test", style = MaterialTheme.typography.headlineLarge)
                     val cfg = session.config
@@ -411,7 +414,7 @@ fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?, onStar
             Icon(if (running) Icons.Outlined.Stop else Icons.Outlined.PlayArrow, null,
                 tint = if (enabled) Palette.OnAccent else Palette.TextFaint, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(8.dp))
-            Text(if (running) "Interrompi test" else "Avvia test", fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Sans,
+            Text(if (running) "INTERROMPI TEST" else "AVVIA TEST", fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = Sans, letterSpacing = 1.8.sp,
                 color = if (enabled) Palette.OnAccent else Palette.TextFaint)
         }
     }
@@ -483,8 +486,9 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
     val alarm by infinite.animateFloat(0.35f, 0.9f, infiniteRepeatable(tween(700), RepeatMode.Reverse), label = "alarm")
     val cfg = s.config
 
+    val heroBg by animateColorAsState(if (down) Palette.DangerBg else Palette.Surface, tween(450), label = "heroBg")
     AppCard(
-        color = if (down) Palette.DangerBg else Palette.Surface,
+        color = heroBg,
         borderColor = if (down) Palette.Red.copy(alpha = alarm) else Palette.Outline,
         padding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
     ) {
@@ -498,7 +502,7 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
             )
         }
         Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        if (!down) Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (s.running) "Ultima risposta" else "Latenza media", style = MaterialTheme.typography.labelMedium, color = Palette.TextDim)
             HelpButton(HelpTopic.LATENCY, size = 14.dp)
         }
@@ -509,17 +513,17 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
                 Text(Format.ms(shown), style = MaterialTheme.typography.displayLarge, color = Palette.Text)
                 Spacer(Modifier.width(6.dp))
                 Text("ms", style = MaterialTheme.typography.headlineSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 10.dp))
-            } else {
+            } else if (!down) {
                 Text(if (lastSample?.status?.isLost == true) "—" else "···", style = MaterialTheme.typography.displayLarge,
                     color = if (lastSample?.status?.isLost == true) Palette.Red else Palette.TextFaint)
             }
             if (down) {
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(80.dp))
                 // Il «timbro» rosso: si riconosce da lontano anche con il telefono appoggiato sul quadro.
                 Text(
-                    "NON\nRISPONDE", color = Palette.Red, fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 21.sp,
+                    "NON RISPONDE", color = Palette.Red, fontWeight = FontWeight.Bold, fontSize = 30.sp, lineHeight = 32.sp,
                     letterSpacing = 2.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 14.dp, end = 6.dp).rotate(-7f)
+                    modifier = Modifier.padding(start = 10.dp, top = 8.dp, bottom = 12.dp).rotate(-5f)
                         .border(3.dp, Palette.Red, RoundedCornerShape(4.dp)).padding(horizontal = 12.dp, vertical = 6.dp),
                 )
             }
@@ -602,12 +606,13 @@ fun ChartCard(s: SessionState) {
     var all by remember { mutableStateOf(false) }
     AppCard {
         SectionHeader("Andamento", help = HelpTopic.CHART) {
-            Row(Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(3.dp)) {
+            Row(Modifier.clip(RoundedCornerShape(3.dp)).border(1.dp, Palette.OutlineStrong.copy(alpha = 0.6f), RoundedCornerShape(3.dp)).padding(2.dp)) {
                 listOf("Ultimi 60" to false, "Tutto" to true).forEach { (label, v) ->
+                    val sel = all == v
                     Text(label, style = MaterialTheme.typography.labelMedium,
-                        color = if (all == v) Palette.Text else Palette.TextDim,
-                        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (all == v) Palette.Surface3 else Color.Transparent)
-                            .clickable { all = v }.padding(horizontal = 10.dp, vertical = 5.dp))
+                        color = if (sel) Palette.OnAccent else Palette.TextDim,
+                        modifier = Modifier.clip(RoundedCornerShape(2.dp)).background(if (sel) Palette.Accent else Color.Transparent)
+                            .clickable(onClickLabel = "Mostra $label") { all = v }.padding(horizontal = 10.dp, vertical = 4.dp))
                 }
             }
         }
@@ -615,8 +620,8 @@ fun ChartCard(s: SessionState) {
         val data = if (all) downsample(s.samples, 600) else s.samples.takeLast(60)
         LatencyChart(data, avgMs = s.stats.avgMs)
         Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Legend(Palette.Accent, "Latenza")
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Legend(Palette.Text, "Latenza (ms)", line = true)
             Legend(Palette.Teal, "Media", dashed = true)
             Legend(Palette.Red, "Perso")
         }
@@ -633,9 +638,13 @@ fun downsample(samples: List<PingSample>, maxPoints: Int): List<PingSample> {
 }
 
 @Composable
-private fun Legend(color: Color, label: String, dashed: Boolean = false) {
+private fun Legend(color: Color, label: String, dashed: Boolean = false, line: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(if (dashed) 12.dp else 8.dp, if (dashed) 2.dp else 8.dp).clip(CircleShape).background(color))
+        when {
+            dashed -> Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) { repeat(3) { Box(Modifier.size(4.dp, 2.dp).background(color)) } }
+            line -> Box(Modifier.size(14.dp, 2.dp).background(color))
+            else -> Box(Modifier.size(8.dp, 5.dp).background(color))
+        }
         Spacer(Modifier.width(6.dp))
         Text(label, style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
     }
@@ -676,25 +685,31 @@ fun PacketsCard(s: SessionState, settings: AppSettings) {
 
 @Composable
 fun PacketRow(p: PingSample, ip: String, high: Int) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth()
+            .drawBehind { drawLine(Palette.Outline, androidx.compose.ui.geometry.Offset(0f, size.height), androidx.compose.ui.geometry.Offset(size.width, size.height), 1f) }
+            .background(if (p.status.isLost) Palette.Red.copy(alpha = 0.05f) else Color.Transparent)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         val c = if (p.status.isLost) Palette.Red else latencyColor(p.rttMs, high)
-        Box(Modifier.size(10.dp).clip(CircleShape).background(c))
-        Spacer(Modifier.width(12.dp))
-        Text("#${p.seq}", style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"), color = Palette.TextFaint, modifier = Modifier.width(52.dp))
+        Box(Modifier.size(4.dp, 22.dp).background(c))
+        Spacer(Modifier.width(10.dp))
+        Text("#${p.seq}", style = MaterialTheme.typography.bodySmall, fontFamily = Mono, color = Palette.TextFaint, modifier = Modifier.width(48.dp))
         Column(Modifier.weight(1f)) {
             if (p.status.isLost) {
                 Text(p.message ?: "Richiesta scaduta.", style = MaterialTheme.typography.bodyMedium, color = Palette.Red)
             } else {
                 Text("Risposta da $ip", style = MaterialTheme.typography.bodyMedium, color = Palette.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("byte=${p.bytes}" + (p.ttl?.let { " · TTL=$it" } ?: "") + " · " + Format.time(p.timestamp),
-                    style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+                Text("byte=${p.bytes}" + (p.ttl?.let { " TTL=$it" } ?: "") + "  " + Format.time(p.timestamp),
+                    style = MaterialTheme.typography.bodySmall, fontFamily = Mono, fontSize = 11.sp, color = Palette.TextFaint)
             }
         }
         if (!p.status.isLost) {
             Text(Format.ms(p.rttMs ?: 0.0), style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"), color = c)
             Text(" ms", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
         } else {
-            Text(Format.time(p.timestamp), style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+            Text(Format.time(p.timestamp), style = MaterialTheme.typography.bodySmall, fontFamily = Mono, fontSize = 11.sp, color = Palette.TextFaint)
         }
     }
 }
@@ -707,6 +722,9 @@ fun EventsCard(events: List<PingEvent>, title: String = "Cronologia eventi") {
     AppCard {
         SectionHeader(title, help = HelpTopic.EVENTS)
         Spacer(Modifier.height(10.dp))
+        if (shown.isEmpty()) {
+            Text("Nessun evento: non ci sono state perdite, interruzioni o picchi.", style = MaterialTheme.typography.bodyMedium, color = Palette.TextFaint)
+        }
         shown.forEachIndexed { i, e -> EventRow(e, last = i == shown.lastIndex) }
         if (list.size > 6) {
             TextButton(onClick = { expanded = !expanded }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
@@ -729,14 +747,14 @@ private fun EventRow(e: PingEvent, last: Boolean) {
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(20.dp).fillMaxHeight()) {
             Spacer(Modifier.height(5.dp))
-            Box(Modifier.size(10.dp).clip(CircleShape).background(color))
-            if (!last) Box(Modifier.padding(top = 4.dp).width(2.dp).weight(1f).background(Palette.OutlineStrong))
+            Box(Modifier.size(10.dp).background(color))
+            if (!last) Box(Modifier.padding(top = 3.dp).width(1.dp).weight(1f).background(Palette.OutlineStrong.copy(alpha = 0.35f)))
         }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f).padding(bottom = 12.dp)) {
             Row {
                 Text(e.title, style = MaterialTheme.typography.titleSmall, color = Palette.Text, modifier = Modifier.weight(1f))
-                Text(Format.time(e.timestamp), style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+                Text(Format.time(e.timestamp), style = MaterialTheme.typography.bodySmall, fontFamily = Mono, fontSize = 11.sp, color = Palette.TextFaint)
             }
             e.detail?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Palette.TextDim) }
         }
@@ -760,10 +778,11 @@ fun FinishedActions(onCopy: () -> Unit, onShare: () -> Unit, onRepeat: () -> Uni
 @Composable
 fun ActionTile(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Column(
-        modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable(onClick = onClick).padding(vertical = 14.dp),
+        modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface).border(1.dp, Palette.OutlineStrong.copy(alpha = 0.45f), RoundedCornerShape(4.dp))
+            .clickable(onClick = onClick).padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, label, tint = Palette.AccentSoft)
+        Icon(icon, null, tint = Palette.Text)
         Spacer(Modifier.height(6.dp))
         Text(label, style = MaterialTheme.typography.labelMedium, color = Palette.Text)
     }
@@ -771,8 +790,8 @@ fun ActionTile(icon: ImageVector, label: String, modifier: Modifier = Modifier, 
 
 @Composable
 private fun IdleHint() {
-    AppCard(color = Palette.Surface.copy(alpha = 0.6f)) {
-        Text("Come funziona", style = MaterialTheme.typography.titleMedium)
+    AppCard {
+        PanelTitle("Come funziona")
         Spacer(Modifier.height(10.dp))
         listOf(
             "1" to "Collega il telefono al Wi-Fi della scheda.",
@@ -781,8 +800,8 @@ private fun IdleHint() {
             "4" to "Premi «Avvia test» e guarda i risultati in tempo reale. Hai dubbi? Apri la Guida: c'è anche la Diagnosi guidata.",
         ).forEach { (n, t) ->
             Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(26.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
-                    Text(n, style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft)
+                Box(Modifier.size(26.dp).clip(RoundedCornerShape(3.dp)).background(Palette.Accent), contentAlignment = Alignment.Center) {
+                    Text(n, style = MaterialTheme.typography.labelMedium, fontFamily = Mono, color = Palette.OnAccent)
                 }
                 Spacer(Modifier.width(12.dp))
                 Text(t, style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)

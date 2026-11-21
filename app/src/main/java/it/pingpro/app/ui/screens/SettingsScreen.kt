@@ -32,6 +32,8 @@ import it.pingpro.app.ping.PingConfig
 import it.pingpro.app.ui.components.AppCard
 import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.theme.Mono
+import it.pingpro.app.ui.components.PanelTitle
+import it.pingpro.app.ui.components.SquareIconButton
 import it.pingpro.app.ui.theme.Palette
 
 @Composable
@@ -47,7 +49,7 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
         item { BackHeader("Impostazioni", null, onBack) }
         item {
             AppCard {
-                Text("Parametri del PING", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Parametri del PING")
                 Text(
                     if (isDefault) "Valori predefiniti di Windows: nessuna modifica necessaria." else "Hai modificato i valori predefiniti di Windows.",
                     style = MaterialTheme.typography.bodySmall, color = if (isDefault) Palette.Green else Palette.Amber,
@@ -70,7 +72,7 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
         }
         item {
             AppCard {
-                Text("Avvisi", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Avvisi")
                 Spacer(Modifier.height(6.dp))
                 Toggle("Vibrazione", "Vibra quando la scheda smette di rispondere e quando torna raggiungibile", settings.vibrateOnAlert) { v -> update { it.copy(vibrateOnAlert = v) } }
                 Toggle("Suono", "Emette un segnale acustico negli stessi momenti", settings.soundOnAlert) { v -> update { it.copy(soundOnAlert = v) } }
@@ -79,7 +81,7 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
         }
         item {
             AppCard {
-                Text("Aspetto", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Aspetto")
                 Spacer(Modifier.height(10.dp))
                 SegmentedToggle(listOf("Chiaro", "Scuro", "Automatico"), when (settings.theme) { "dark" -> 1; "system" -> 2; else -> 0 },
                     { i -> update { it.copy(theme = listOf("light", "dark", "system")[i]) } })
@@ -89,14 +91,14 @@ fun SettingsScreen(settings: AppSettings, update: ((AppSettings) -> AppSettings)
         }
         item {
             AppCard {
-                Text("Schermo", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Schermo")
                 Toggle("Mantieni lo schermo acceso", "Durante il test lo schermo non si spegne da solo", settings.keepScreenOn) { v -> update { it.copy(keepScreenOn = v) } }
             }
         }
         if (updates != null) item { updates() }
         item {
             AppCard {
-                Text("Aiuto", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Aiuto")
                 TextButton(onClick = onTutorial) { Text("Rivedi il tutorial iniziale") }
                 Text("PingPro ${BuildConfig.VERSION_NAME} · Motore ICMP nativo Android", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
             }
@@ -111,10 +113,10 @@ private fun Stepper(label: String, flag: String?, value: Int, min: Int, max: Int
             Text(label, style = MaterialTheme.typography.bodyLarge)
             if (flag != null) Text("Windows: $flag", fontFamily = Mono, style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
         }
-        FilledTonalIconButton(onClick = { onChange((value - step).coerceAtLeast(min)) }, enabled = value > min) { Icon(Icons.Outlined.Remove, "Diminuisci") }
-        Text(value.toString(), style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+        SquareIconButton(Icons.Outlined.Remove, "Diminuisci $label", { onChange((value - step).coerceAtLeast(min)) }, enabled = value > min)
+        Text(value.toString(), style = MaterialTheme.typography.titleMedium, fontFamily = Mono,
             modifier = Modifier.width(64.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        FilledTonalIconButton(onClick = { onChange((value + step).coerceAtMost(max)) }, enabled = value < max) { Icon(Icons.Outlined.Add, "Aumenta") }
+        SquareIconButton(Icons.Outlined.Add, "Aumenta $label", { onChange((value + step).coerceAtMost(max)) }, enabled = value < max)
     }
 }
 

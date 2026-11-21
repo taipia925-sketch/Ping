@@ -52,6 +52,7 @@ import it.pingpro.app.data.TargetGroup
 import it.pingpro.app.ping.NetInterfaceInfo
 import it.pingpro.app.ping.TargetParser
 import it.pingpro.app.ui.components.AppCard
+import it.pingpro.app.ui.components.PanelTitle
 import it.pingpro.app.ui.theme.Palette
 
 /** Composizione dell'elenco di schede da controllare insieme. */
@@ -108,7 +109,7 @@ fun MultiEditScreen(
 
         if (groups.isNotEmpty()) item {
             AppCard {
-                Text("Gruppi salvati", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Gruppi salvati")
                 Text("Un gruppo è un elenco di schede con un nome, ad esempio tutte le schede di un apparato.", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 Spacer(Modifier.height(6.dp))
                 groups.forEach { g ->
@@ -135,7 +136,7 @@ fun MultiEditScreen(
         }
         item {
             AppCard {
-                Text("Aggiungi un intervallo", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Aggiungi un intervallo")
                 Text("Tutti gli indirizzi dal primo all'ultimo, estremi compresi.", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -172,7 +173,7 @@ fun MultiEditScreen(
 
         if (devices.isNotEmpty()) item {
             AppCard {
-                Text("Schede salvate", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Schede salvate")
                 Spacer(Modifier.height(4.dp))
                 devices.sortedBy { it.name.lowercase() }.forEach { d ->
                     val inList = targets.any { it.address.equals(d.address, true) }
@@ -194,7 +195,7 @@ fun MultiEditScreen(
 
         item {
             AppCard {
-                Text("Scrivi o incolla indirizzi", style = MaterialTheme.typography.titleMedium)
+                PanelTitle("Scrivi o incolla indirizzi")
                 Text("Uno per riga oppure separati da virgola. Puoi scrivere anche intervalli brevi, ad esempio 192.168.1.10-20.",
                     style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 Spacer(Modifier.height(10.dp))
@@ -227,7 +228,7 @@ fun MultiEditScreen(
 
         item {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, top = 6.dp)) {
-                Text("Elenco (${targets.size})", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                PanelTitle("Elenco (${targets.size})", Modifier.weight(1f))
                 if (targets.isNotEmpty()) TextButton(onClick = { onChange(emptyList(), null) }) { Text("Svuota", color = Palette.Red) }
             }
         }

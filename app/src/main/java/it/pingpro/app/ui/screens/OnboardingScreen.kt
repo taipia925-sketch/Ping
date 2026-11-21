@@ -95,7 +95,7 @@ fun OnboardingScreen(onDone: () -> Unit, onTour: (() -> Unit)? = null) {
             repeat(pages.size) { i ->
                 val w by animateDpAsState(if (pager.currentPage == i) 24.dp else 8.dp, label = "dot")
                 val c by animateColorAsState(if (pager.currentPage == i) Palette.Accent else Palette.Surface3, label = "dotc")
-                Box(Modifier.padding(horizontal = 4.dp).size(w, 8.dp).clip(CircleShape).background(c))
+                Box(Modifier.padding(horizontal = 3.dp).size(w, 4.dp).background(c))
             }
         }
         val last = pager.currentPage == pages.lastIndex
@@ -105,7 +105,7 @@ fun OnboardingScreen(onDone: () -> Unit, onTour: (() -> Unit)? = null) {
                 .clickable { if (last) onDone() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
             contentAlignment = Alignment.Center,
         ) {
-            Text(if (last) "Inizia" else "Avanti", color = Palette.OnAccent, style = MaterialTheme.typography.labelLarge, fontSize = 17.sp)
+            Text(if (last) "INIZIA" else "AVANTI", color = Palette.OnAccent, style = MaterialTheme.typography.labelLarge, letterSpacing = 1.8.sp)
         }
         if (last && onTour != null) {
             TextButton(onClick = onTour, modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp)) {
@@ -121,14 +121,27 @@ private fun PulseArt() {
     val w by t.animateFloat(0f, 1f, infiniteRepeatable(tween(2200, easing = LinearEasing)), label = "w")
     Box(contentAlignment = Alignment.Center) {
         Canvas(Modifier.size(240.dp)) {
+            // Impulsi quadrati che si allargano: il "ping" che parte verso la scheda.
             val r = size.minDimension / 2
+            val c = center
             for (k in 0..2) {
                 val f = (w + k / 3f) % 1f
-                drawCircle(Palette.Accent.copy(alpha = (1 - f) * 0.5f), r * (0.3f + 0.7f * f), style = Stroke(2.dp.toPx()))
+                val half = r * (0.34f + 0.66f * f)
+                drawRect(Palette.Text.copy(alpha = (1 - f) * 0.45f), topLeft = c - androidx.compose.ui.geometry.Offset(half, half),
+                    size = androidx.compose.ui.geometry.Size(half * 2, half * 2), style = Stroke(1.5.dp.toPx()))
             }
-            drawCircle(Palette.Accent.copy(alpha = 0.18f), r * 0.32f)
+            // Mirino agli angoli, come su un disegno tecnico.
+            val e = r * 0.98f; val l = 14.dp.toPx(); val sw = 2.dp.toPx()
+            listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).forEach { (sx, sy) ->
+                val p0 = androidx.compose.ui.geometry.Offset(c.x + sx * e, c.y + sy * e)
+                drawLine(Palette.Text, p0, p0.copy(x = p0.x - sx * l), sw)
+                drawLine(Palette.Text, p0, p0.copy(y = p0.y - sy * l), sw)
+            }
+            val half = r * 0.32f
+            drawRect(Palette.Surface, topLeft = c - androidx.compose.ui.geometry.Offset(half, half), size = androidx.compose.ui.geometry.Size(half * 2, half * 2))
+            drawRect(Palette.Text, topLeft = c - androidx.compose.ui.geometry.Offset(half, half), size = androidx.compose.ui.geometry.Size(half * 2, half * 2), style = Stroke(2.dp.toPx()))
         }
-        Icon(Icons.Outlined.Router, null, tint = Palette.AccentSoft, modifier = Modifier.size(56.dp))
+        Icon(Icons.Outlined.Router, null, tint = Palette.Text, modifier = Modifier.size(52.dp))
     }
 }
 

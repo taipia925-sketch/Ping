@@ -63,6 +63,9 @@ import it.pingpro.app.ui.components.Pill
 import it.pingpro.app.ui.components.PillShape
 import it.pingpro.app.ui.components.SegmentedToggle
 import it.pingpro.app.ui.theme.Mono
+import it.pingpro.app.ui.components.screenHeader
+import it.pingpro.app.ui.components.PanelTitle
+import it.pingpro.app.ui.components.SquareIconButton
 import it.pingpro.app.ui.theme.Palette
 
 private fun iconFor(type: String): ImageVector = when (type) {
@@ -97,7 +100,7 @@ fun NetworkScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 22.dp, start = 4.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().screenHeader(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Rete", style = MaterialTheme.typography.headlineLarge)
                     Text("Come ipconfig, sul telefono", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
@@ -227,7 +230,7 @@ private fun SignalCard(lan: NetInterfaceInfo) {
 @Composable
 private fun DetailsCard(i: NetInterfaceInfo, running: Boolean, onPing: (String) -> Unit, onUse: (String) -> Unit) {
     AppCard(padding = PaddingValues(start = 20.dp, end = 8.dp, top = 18.dp, bottom = 10.dp)) {
-        Text("Dettagli", style = MaterialTheme.typography.titleMedium)
+        PanelTitle("Dettagli")
         Spacer(Modifier.height(6.dp))
         InfoRow("Indirizzo IPv4 telefono", i.ipv4, HelpTopic.PHONE_IP)
         InfoRow("Subnet mask", i.subnetMask?.let { "$it  (/${i.prefixLength})" }, HelpTopic.SUBNET)
@@ -254,17 +257,14 @@ private fun InfoRow(
                 Text(label, style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 if (help != null) HelpButton(help, size = 13.dp)
             }
-            Text(value ?: "—", style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+            Text(value ?: "—", style = MaterialTheme.typography.titleMedium, fontFamily = Mono, fontWeight = FontWeight.Medium, fontSize = 16.sp,
                 color = if (value == null) Palette.TextFaint else Palette.Text)
         }
         if (pingable && value != null) {
             Text("Usa", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
                 modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable { onUse(value) }.padding(horizontal = 10.dp, vertical = 8.dp))
-            IconButton(onClick = { onPing(value) }, enabled = !running) {
-                Box(Modifier.size(36.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent.copy(alpha = if (running) 0.06f else 0.18f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Outlined.NetworkPing, "Ping $value", tint = if (running) Palette.TextFaint else Palette.AccentSoft, modifier = Modifier.size(20.dp))
-                }
-            }
+            Spacer(Modifier.width(4.dp))
+            SquareIconButton(Icons.Outlined.NetworkPing, "Ping $value", { onPing(value) }, enabled = !running, size = 38.dp)
         }
     }
 }

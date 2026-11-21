@@ -1,8 +1,8 @@
 {
-  "versionCode": 12,
-  "versionName": "2.3.0",
-  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.3.0.apk",
-  "sha256": "b8ce5636f9b9ff1e6d8e4377679e751157035e2a528f3a94779ae8e4157867f8",
-  "sizeBytes": 1892902,
-  "notes": "Nuovo aspetto «Scheda tecnica» (carta, inchiostro, caratteri IBM Plex). Avviso quando le schede di Più schede sono su un'altra rete. Durata del test sempre aggiornata. «In attesa della prima risposta» al posto di 0/0. Cambio schermata senza sovrapposizioni."
+  "versionCode": 13,
+  "versionName": "2.4.0",
+  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.4.0.apk",
+  "sha256": "4f519c77becf89edadc59d8bdf42249678461ea34f5575b92ada90791ca983f1",
+  "sizeBytes": 1909286,
+  "notes": "Grafica rifinita: intestazioni con filetto, grafico tecnico (pacchetti persi senza coprire la linea, media indicata), elenco pacchetti a tabella, Più schede con barra di stato e mini mappa dei pacchetti, pulsanti quadrati coerenti, schermate vuote curate, tema scuro migliorato, animazioni di stato più morbide."
 }

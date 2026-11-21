@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import it.pingpro.app.data.SavedDevice
 import it.pingpro.app.data.TestSummary
 import it.pingpro.app.ping.NetworkResolver
@@ -53,6 +54,8 @@ import it.pingpro.app.ui.Format
 import it.pingpro.app.ui.components.AppCard
 import it.pingpro.app.ui.components.EmptyState
 import it.pingpro.app.ui.components.IconBadge
+import it.pingpro.app.ui.components.screenHeader
+import it.pingpro.app.ui.components.SquareIconButton
 import it.pingpro.app.ui.theme.Palette
 
 /** Stato dell'editor delle schede: null = chiuso. */
@@ -73,14 +76,12 @@ fun DevicesScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item {
-            Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top = 20.dp, start = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().screenHeader(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Schede", style = MaterialTheme.typography.headlineLarge)
                     Text("Indirizzi salvati con un nome", style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
                 }
-                FilledIconButton(onClick = { onEdit(DeviceDraft(null, "", "", "")) }, colors = IconButtonDefaults.filledIconButtonColors(containerColor = Palette.Accent)) {
-                    Icon(Icons.Outlined.Add, "Aggiungi scheda")
-                }
+                SquareIconButton(Icons.Outlined.Add, "Aggiungi scheda", { onEdit(DeviceDraft(null, "", "", "")) }, filled = true, size = 44.dp)
             }
         }
         if (devices.isEmpty()) {
@@ -97,14 +98,10 @@ fun DevicesScreen(
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Text(d.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(d.address, style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"), color = Palette.TextDim)
+                        Text(d.address, style = MaterialTheme.typography.bodyMedium, fontFamily = it.pingpro.app.ui.theme.Mono, fontSize = 14.sp, color = Palette.TextDim)
                         if (d.note.isNotBlank()) Text(d.note, style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
-                    FilledIconButton(
-                        onClick = { onPing(d) }, enabled = !running,
-                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = Palette.Accent.copy(alpha = 0.18f), contentColor = Palette.AccentSoft),
-                        modifier = Modifier.size(48.dp),
-                    ) { Icon(Icons.Outlined.PlayArrow, "Avvia test") }
+                    SquareIconButton(Icons.Outlined.PlayArrow, "Avvia test su ${d.name}", { onPing(d) }, enabled = !running, filled = true, size = 46.dp)
                 }
                 if (last != null) {
                     Spacer(Modifier.height(12.dp))

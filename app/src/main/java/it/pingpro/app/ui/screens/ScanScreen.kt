@@ -44,6 +44,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -60,6 +63,7 @@ import it.pingpro.app.ui.components.HelpButton
 import it.pingpro.app.ui.components.HelpTopic
 import it.pingpro.app.ui.components.IconBadge
 import it.pingpro.app.ui.components.PillShape
+import it.pingpro.app.ui.components.PanelTitle
 import it.pingpro.app.ui.theme.Palette
 
 /** Testo del dispositivo trovato: nome dalla rete, oppure "router"/"questo telefono". */
@@ -131,7 +135,7 @@ fun ScanScreen(
         item {
             AppCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Indirizzi da controllare", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    PanelTitle("Indirizzi da controllare", Modifier.weight(1f))
                     HelpButton(HelpTopic.SCAN, size = 16.dp)
                 }
                 Spacer(Modifier.height(10.dp))
@@ -168,8 +172,8 @@ fun ScanScreen(
             ) {
                 Icon(if (state.running) Icons.Outlined.Stop else Icons.Outlined.Search, null, tint = if (enabled) Palette.OnAccent else Palette.TextFaint)
                 Spacer(Modifier.width(8.dp))
-                Text(if (state.running) "Interrompi ricerca" else if (finished) "Cerca di nuovo" else "Avvia ricerca",
-                    style = MaterialTheme.typography.labelLarge, color = if (enabled) Palette.OnAccent else Palette.TextFaint)
+                Text((if (state.running) "Interrompi ricerca" else if (finished) "Cerca di nuovo" else "Avvia ricerca").uppercase(),
+                    style = MaterialTheme.typography.labelLarge, letterSpacing = 1.6.sp, color = if (enabled) Palette.OnAccent else Palette.TextFaint)
             }
             if (busy && !state.running) Text("C'è un test in corso: interrompilo per avviare la ricerca.", style = MaterialTheme.typography.bodySmall,
                 color = Palette.Amber, modifier = Modifier.padding(top = 6.dp, start = 8.dp))
@@ -184,8 +188,9 @@ fun ScanScreen(
                         color = Palette.TextDim, modifier = Modifier.padding(bottom = 8.dp))
                 }
                 Spacer(Modifier.height(10.dp))
-                Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface3)) {
-                    Box(Modifier.fillMaxWidth(state.progress).height(8.dp).clip(RoundedCornerShape(4.dp)).background(if (state.running) Palette.Accent else Palette.Green))
+                val prog by androidx.compose.animation.core.animateFloatAsState(state.progress, label = "scan")
+                Box(Modifier.fillMaxWidth().height(8.dp).border(1.dp, Palette.OutlineStrong.copy(alpha = 0.5f)).padding(1.dp)) {
+                    Box(Modifier.fillMaxWidth(prog).fillMaxHeight().background(if (state.running) Palette.Accent else Palette.Green))
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -212,8 +217,8 @@ fun ScanScreen(
                     Icon(Icons.Outlined.NetworkPing, null, tint = if (enabled) Palette.OnAccent else Palette.TextFaint)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (selected.isEmpty()) "Pinga tutti (${chosen.size})" else if (chosen.size == 1) "Pinga il selezionato" else "Pinga i ${chosen.size} selezionati",
-                        style = MaterialTheme.typography.labelLarge, color = if (enabled) Palette.OnAccent else Palette.TextFaint,
+                        (if (selected.isEmpty()) "Pinga tutti (${chosen.size})" else if (chosen.size == 1) "Pinga il selezionato" else "Pinga i ${chosen.size} selezionati").uppercase(),
+                        style = MaterialTheme.typography.labelLarge, letterSpacing = 1.6.sp, color = if (enabled) Palette.OnAccent else Palette.TextFaint,
                     )
                 }
                 Text(
@@ -224,7 +229,7 @@ fun ScanScreen(
             }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
-                    Text("Dispositivi che rispondono", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    PanelTitle("Dispositivi che rispondono", Modifier.weight(1f))
                     if (!state.running) {
                         val all = selected.size == state.found.size
                         TextButton(onClick = { selected = if (all) emptySet() else state.found.map { it.address }.toSet() }) {
@@ -237,11 +242,11 @@ fun ScanScreen(
                 val sel = d.address in selected
                 val shape = when {
                     state.found.size == 1 -> RoundedCornerShape(4.dp)
-                    i == 0 -> RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
-                    i == state.found.lastIndex -> RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp)
+                    i == 0 -> RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                    i == state.found.lastIndex -> RoundedCornerShape(bottomStart = 4.dp, bottomEnd = 4.dp)
                     else -> RoundedCornerShape(0.dp)
                 }
-                Column(Modifier.fillMaxWidth().clip(shape).background(Palette.Surface)) {
+                Column(Modifier.animateItem().fillMaxWidth().clip(shape).background(Palette.Surface)) {
                     Row(
                         Modifier.fillMaxWidth().clickable(enabled = !state.running) { selected = if (sel) selected - d.address else selected + d.address }
                             .padding(start = 12.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
@@ -267,7 +272,8 @@ fun ScanScreen(
                                 style = MaterialTheme.typography.bodySmall, color = if (title == d.address) Palette.TextFaint else Palette.TextDim,
                             )
                         }
-                        Text(Format.ms(d.rttMs) + " ms", style = MaterialTheme.typography.titleSmall, color = Palette.TextDim)
+                        Text(Format.ms(d.rttMs), style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"), color = Palette.Text)
+                        Text(" ms", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                         IconButton(onClick = { onPing(d.address) }, enabled = !state.running && !busy) {
                             Icon(Icons.Outlined.NetworkPing, "Ping ${d.address}", tint = if (!state.running && !busy) Palette.AccentSoft else Palette.TextFaint)
                         }

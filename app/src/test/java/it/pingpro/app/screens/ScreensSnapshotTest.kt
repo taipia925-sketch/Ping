@@ -231,4 +231,14 @@ class ScreensSnapshotTest {
     @Test fun guide() = pages(4) { GuideScreen({}, {}) }
     @Test fun onboarding() = shot { OnboardingScreen(onDone = {}) }
     @Test fun settings() = shot { SettingsScreen(AppSettings(), {}, {}, {}) }
+
+    private fun dark(block: () -> Unit) { Palette.dark = true; try { block() } finally { Palette.dark = false } }
+    @Test fun dark_multi() = dark { shot { MultiScreen(multiState(true), multiTargets, "Quadro linea 3", groupsList, PingMode.CONTINUOUS, AppSettings(), false,
+        {}, {}, {}, {}, {}, {}, {}, {}, {}, {}) } }
+    @Test fun dark_network() = dark { shot { NetworkScreen(listOf(wifi, cell), false, {}, {}, {}, {}) } }
+    @Test fun dark_devices() = dark { shot { DevicesScreen(devices, hist, false, {}, {}, {}) } }
+    @Test fun dark_history() = dark { shot { HistoryScreen(hist, {}, { _, _ -> }, {}) } }
+    @Test fun dark_test_down() = dark { test(session(30, setOf(26, 27, 28, 29, 30))) }
+    @Test fun devices_empty() = shot { DevicesScreen(emptyList(), emptyList(), false, {}, {}, {}) }
+    @Test fun history_empty() = shot { HistoryScreen(emptyList(), {}, { _, _ -> }, {}) }
 }

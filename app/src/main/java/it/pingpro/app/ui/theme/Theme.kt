@@ -62,7 +62,7 @@ object Palette {
     val Red get() = pick(0xFFB3261E, 0xFFFF6B5E)
     val Violet get() = pick(0xFF5A4688, 0xFFB7A4EA)
     /** Pulsante "Interrompi". */
-    val Danger get() = pick(0xFFB3261E, 0xFFFF6B5E)
+    val Danger get() = pick(0xFFB3261E, 0xFFD9483C)
     /** Sfondo di un riquadro in allarme (scheda che non risponde). */
     val DangerBg get() = pick(0xFFF5E0D9, 0xFF35140F)
     val OnDangerBg get() = pick(0xFF7A1712, 0xFFFFD9D3)

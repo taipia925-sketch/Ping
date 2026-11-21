@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -49,41 +50,53 @@ internal fun niceMax(v: Double): Double {
 data class ChartSeries(val samples: List<PingSample>, val color: Color, val label: String? = null)
 
 /**
- * Grafico della latenza: area sfumata + linea, barre rosse per i pacchetti persi,
- * zone evidenziate per le interruzioni e linea tratteggiata della media.
+ * Grafico della latenza, impostato come un tracciato tecnico: assi a inchiostro, griglia sottile,
+ * valori in carattere monospaziato. I pacchetti persi sono una fascia rossa tenue con una tacca
+ * sull'asse (così la linea resta leggibile); le interruzioni sono tratteggiate. La media è una
+ * linea tratteggiata con il suo valore scritto accanto.
  */
 @Composable
 fun LatencyChart(
     samples: List<PingSample>,
     modifier: Modifier = Modifier,
     height: Dp = 200.dp,
-    lineColor: Color = Palette.Accent,
+    lineColor: Color = Palette.Text,
     avgMs: Double? = null,
     extraSeries: List<ChartSeries> = emptyList(),
     alignBySeq: Boolean = false,
 ) {
     val measurer = rememberTextMeasurer()
-    val labelStyle = remember { TextStyle(color = Palette.TextFaint, fontSize = 10.sp) }
+    val dark = Palette.dark
+    val labelStyle = remember(dark) { TextStyle(color = Palette.TextFaint, fontSize = 10.sp, fontFamily = it.pingpro.app.ui.theme.Mono) }
+    val avgStyle = remember(dark) { TextStyle(color = Palette.Teal, fontSize = 10.sp, fontFamily = it.pingpro.app.ui.theme.Mono, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold) }
+    val lineC = if (lineColor == Palette.Accent) Palette.Text else lineColor
     Canvas(modifier.fillMaxWidth().height(height)) {
-        val all = listOf(ChartSeries(samples, lineColor)) + extraSeries
+        val all = listOf(ChartSeries(samples, lineC)) + extraSeries
         val maxPoints = all.maxOf { it.samples.size }.coerceAtLeast(2)
         val maxRtt = all.flatMap { s -> s.samples.mapNotNull { it.rttMs } }.maxOrNull() ?: 1.0
         val top = niceMax(max(maxRtt * 1.15, 1.0))
 
-        val leftPad = 36.dp.toPx()
-        val bottomPad = 6.dp.toPx()
+        val leftPad = 30.dp.toPx()
+        val markH = 5.dp.toPx()
+        val bottomPad = markH + 3.dp.toPx()
         val w = size.width - leftPad
         val h = size.height - bottomPad
         fun x(i: Int) = leftPad + if (maxPoints <= 1) w / 2 else i * w / (maxPoints - 1)
         fun y(v: Double) = (h - (v / top) * h).toFloat().coerceIn(0f, h)
+        fun tick(v: Double) = if (top <= 2.5) Format.ms(v) else kotlin.math.round(v).toInt().toString()
 
-        // Griglia orizzontale e etichette.
+        // Griglia orizzontale ed etichette dell'asse.
         for (k in 0..4) {
             val v = top * k / 4
             val yy = y(v)
-            drawLine(Palette.Outline, Offset(leftPad, yy), Offset(size.width, yy), strokeWidth = 1f)
-            drawLabel(measurer, Format.ms(v), labelStyle, Offset(0f, yy - 7.sp.toPx()))
+            if (k > 0) drawLine(Palette.Outline, Offset(leftPad, yy), Offset(size.width, yy), strokeWidth = 1f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 3.dp.toPx())))
+            val t = measurer.measure(tick(v), labelStyle)
+            drawText(t, topLeft = Offset(leftPad - 6.dp.toPx() - t.size.width, (yy - t.size.height / 2f).coerceIn(0f, size.height - t.size.height)))
         }
+        // Assi a inchiostro.
+        drawLine(Palette.OutlineStrong.copy(alpha = 0.7f), Offset(leftPad, 0f), Offset(leftPad, h), strokeWidth = 1.dp.toPx())
+        drawLine(Palette.OutlineStrong.copy(alpha = 0.7f), Offset(leftPad, h), Offset(size.width, h), strokeWidth = 1.dp.toPx())
 
         all.forEachIndexed { si, series ->
             val pts = series.samples
@@ -91,19 +104,31 @@ fun LatencyChart(
             val primary = si == 0
             // Pacchetti persi e interruzioni (solo serie principale).
             if (primary) {
-                val barW = max(2.dp.toPx(), w / maxPoints * 0.6f)
+                val slot = w / maxPoints
+                val barW = max(2.dp.toPx(), slot * 0.7f)
                 var runStart = -1
                 pts.forEachIndexed { i, p ->
                     if (p.status.isLost) {
                         if (runStart < 0) runStart = i
-                        drawRect(Palette.Red.copy(alpha = 0.85f), Offset(x(i) - barW / 2, 0f), Size(barW, h))
+                        drawRect(Palette.Red.copy(alpha = 0.10f), Offset(x(i) - barW / 2, 0f), Size(barW, h))
+                        drawRect(Palette.Red, Offset(x(i) - barW / 2, h + 3.dp.toPx()), Size(barW, markH))
                     }
                     val endRun = runStart >= 0 && (!p.status.isLost || i == pts.lastIndex)
                     if (endRun) {
                         val last = if (p.status.isLost) i else i - 1
                         if (last - runStart >= 1) {
-                            val x0 = x(runStart) - barW; val x1 = x(last) + barW
-                            drawRect(Palette.Red.copy(alpha = 0.16f), Offset(x0, 0f), Size(x1 - x0, h))
+                            // Interruzione: tratteggio diagonale, come una zona "fuori servizio" su un disegno tecnico.
+                            val x0 = (x(runStart) - barW / 2).coerceAtLeast(leftPad); val x1 = (x(last) + barW / 2).coerceAtMost(size.width)
+                            clipRect(x0, 0f, x1, h) {
+                                val step = 7.dp.toPx()
+                                var xx = x0 - h
+                                while (xx < x1) {
+                                    drawLine(Palette.Red.copy(alpha = 0.28f), Offset(xx, h), Offset(xx + h, 0f), strokeWidth = 1.dp.toPx())
+                                    xx += step
+                                }
+                            }
+                            drawLine(Palette.Red.copy(alpha = 0.6f), Offset(x0, 0f), Offset(x0, h), strokeWidth = 1.dp.toPx())
+                            drawLine(Palette.Red.copy(alpha = 0.6f), Offset(x1, 0f), Offset(x1, h), strokeWidth = 1.dp.toPx())
                         }
                         runStart = -1
                     }
@@ -137,29 +162,39 @@ fun LatencyChart(
             }
             closeArea()
             if (primary) {
-                drawPath(area, Brush.verticalGradient(listOf(series.color.copy(alpha = 0.32f), series.color.copy(alpha = 0f)), 0f, h))
+                drawPath(area, Brush.verticalGradient(listOf(series.color.copy(alpha = 0.14f), series.color.copy(alpha = 0f)), 0f, h))
             }
-            drawPath(line, series.color, style = Stroke(width = if (primary) 2.5.dp.toPx() else 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawPath(line, series.color, style = Stroke(width = if (primary) 2.dp.toPx() else 1.75.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
 
-            // Punti singoli quando i campioni sono pochi.
+            // Punti quando i campioni sono pochi; altrimenti solo l'ultimo, evidenziato.
             if (primary && pts.size <= 30) {
                 pts.forEachIndexed { i, p ->
-                    p.rttMs?.let { drawCircle(latencyColor(it), 3.5.dp.toPx(), Offset(x(i), y(it))) }
+                    p.rttMs?.let {
+                        val c = Offset(x(i), y(it))
+                        drawCircle(Palette.Surface, 4.5.dp.toPx(), c)
+                        drawCircle(latencyColor(it), 3.dp.toPx(), c)
+                    }
                 }
             } else if (primary) {
                 val lastIdx = pts.indexOfLast { it.rttMs != null }
                 if (lastIdx >= 0) {
                     val c = Offset(x(lastIdx), y(pts[lastIdx].rttMs!!))
-                    drawCircle(series.color.copy(alpha = 0.22f), 8.dp.toPx(), c)
-                    drawCircle(series.color, 4.dp.toPx(), c)
+                    drawCircle(series.color.copy(alpha = 0.16f), 9.dp.toPx(), c)
+                    drawCircle(Palette.Surface, 5.dp.toPx(), c)
+                    drawCircle(series.color, 3.5.dp.toPx(), c)
                 }
             }
         }
 
         avgMs?.let { a ->
             val yy = y(a)
-            drawLine(Palette.Teal.copy(alpha = 0.8f), Offset(leftPad, yy), Offset(size.width, yy), strokeWidth = 1.5f,
+            drawLine(Palette.Teal.copy(alpha = 0.85f), Offset(leftPad, yy), Offset(size.width, yy), strokeWidth = 1.5f,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f)))
+            // Valore della media scritto sopra la linea, all'inizio (lontano dall'ultimo punto).
+            val t = measurer.measure("Ø " + Format.ms(a), avgStyle)
+            val ty = if (yy - t.size.height - 2.dp.toPx() >= 0f) yy - t.size.height - 2.dp.toPx() else yy + 2.dp.toPx()
+            drawRect(Palette.Surface.copy(alpha = 0.85f), Offset(leftPad + 4.dp.toPx(), ty), Size(t.size.width + 4.dp.toPx(), t.size.height.toFloat()))
+            drawText(t, topLeft = Offset(leftPad + 6.dp.toPx(), ty))
         }
     }
 }
