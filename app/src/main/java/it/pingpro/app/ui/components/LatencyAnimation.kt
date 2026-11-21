@@ -80,7 +80,7 @@ fun LatencyAnimation(modifier: Modifier = Modifier) {
         }
     }
 
-    Column(modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Palette.Surface2).padding(16.dp)) {
+    Column(modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(16.dp)) {
         Box(Modifier.fillMaxWidth().height(70.dp)) {
             Canvas(Modifier.fillMaxWidth().height(70.dp)) {
                 val y = size.height / 2
@@ -109,7 +109,7 @@ fun LatencyAnimation(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.bodySmall, color = if (lostAt != null) Palette.Red else Palette.TextDim,
         )
         Spacer(Modifier.height(8.dp))
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(androidx.compose.ui.graphics.Color(0xFF0C0C0C)).padding(10.dp)) {
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(androidx.compose.ui.graphics.Color(0xFF0C0C0C)).padding(10.dp)) {
             lines.forEach { Text(it, fontFamily = Mono, fontSize = 12.sp, color = if (it.contains("scaduta")) Palette.Red else androidx.compose.ui.graphics.Color(0xFFCCCCCC)) }
             if (lines.isEmpty()) Text(" ", fontFamily = Mono, fontSize = 12.sp)
         }
@@ -120,7 +120,7 @@ fun LatencyAnimation(modifier: Modifier = Modifier) {
             Spacer(Modifier.width(8.dp))
             Text(if (disturbed) "Wi-Fi normale" else "Disturba il Wi-Fi", style = MaterialTheme.typography.labelMedium,
                 color = if (disturbed) Palette.Green else Palette.Amber, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clip(CircleShape).background((if (disturbed) Palette.Green else Palette.Amber).copy(alpha = 0.14f))
+                modifier = Modifier.clip(RoundedCornerShape(4.dp)).background((if (disturbed) Palette.Green else Palette.Amber).copy(alpha = 0.14f))
                     .clickable { disturbed = !disturbed }.padding(horizontal = 12.dp, vertical = 8.dp))
         }
     }
@@ -129,7 +129,7 @@ fun LatencyAnimation(modifier: Modifier = Modifier) {
 @Composable
 private fun Node(icon: ImageVector, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(Palette.Surface3), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface3), contentAlignment = Alignment.Center) {
             Icon(icon, label, tint = Palette.Text, modifier = Modifier.size(22.dp))
         }
         Text(label, fontSize = 10.sp, color = Palette.TextDim)

@@ -1,8 +1,8 @@
 {
-  "versionCode": 11,
-  "versionName": "2.2.2",
-  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.2.2.apk",
-  "sha256": "e17fe36b06bf06d064115814b3b002ca84cab7373929372218f4f6bfa79e9881",
-  "sizeBytes": 1742946,
-  "notes": "Ricerca dispositivi: nuovo pulsante «Pinga tutti» che avvia subito il test di tutti i dispositivi trovati (o dei selezionati). «Copia» ora copia solo gli indirizzi IP, uno per riga."
+  "versionCode": 12,
+  "versionName": "2.3.0",
+  "apkUrl": "https://raw.githubusercontent.com/taipia925-sketch/Ping/HEAD/release/PingPro-2.3.0.apk",
+  "sha256": "b8ce5636f9b9ff1e6d8e4377679e751157035e2a528f3a94779ae8e4157867f8",
+  "sizeBytes": 1892902,
+  "notes": "Nuovo aspetto «Scheda tecnica» (carta, inchiostro, caratteri IBM Plex). Avviso quando le schede di Più schede sono su un'altra rete. Durata del test sempre aggiornata. «In attesa della prima risposta» al posto di 0/0. Cambio schermata senza sovrapposizioni."
 }

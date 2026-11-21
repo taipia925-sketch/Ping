@@ -182,6 +182,10 @@ class ScreensSnapshotTest {
         MultiScreen(MultiState(), multiTargets, "Quadro linea 3", groupsList, PingMode.CONTINUOUS, AppSettings(), false,
             {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     }
+    @Test fun multi_off_network() = shot {
+        MultiScreen(multiState(true), multiTargets, "Dispositivi trovati", groupsList, PingMode.CONTINUOUS, AppSettings(), false,
+            {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, lan = wifi.copy(ipv4 = "192.168.178.162", gateway = "192.168.178.1"))
+    }
     @Test fun multi_edit() = pages(2) {
         MultiEditScreen(multiTargets.take(3), "Quadro linea 3", devices, groupsList, wifi, { _, _ -> }, {}, {}, {}, {}, {})
     }

@@ -58,7 +58,7 @@ fun UpdateDialog(
     AlertDialog(
         onDismissRequest = { if (state !is UpdateState.Downloading) onLater(info) },
         containerColor = Palette.Surface,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(4.dp),
         title = {
             Text(when (state) {
                 is UpdateState.Ready -> "Pronto da installare"
@@ -79,8 +79,8 @@ fun UpdateDialog(
                 when (state) {
                     is UpdateState.Downloading -> {
                         Spacer(Modifier.height(16.dp))
-                        Box(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(Palette.Surface3)) {
-                            Box(Modifier.fillMaxWidth(state.progress).height(8.dp).clip(CircleShape).background(Palette.Accent))
+                        Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface3)) {
+                            Box(Modifier.fillMaxWidth(state.progress).height(8.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent))
                         }
                         Text("${(state.progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim,
                             modifier = Modifier.padding(top = 6.dp))

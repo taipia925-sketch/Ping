@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const appVersion = "1.0.0"
+const appVersion = "1.1.0"
 
 func main() {
 	noWindow := flag.Bool("no-window", false, "non aprire la finestra (solo server, per prove)")

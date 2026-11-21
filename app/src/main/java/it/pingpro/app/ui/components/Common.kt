@@ -46,10 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import it.pingpro.app.ui.theme.Palette
 
-val CardShape = RoundedCornerShape(26.dp)
+val CardShape = RoundedCornerShape(4.dp)
 
 /** Forma "a pillola" dei pulsanti principali. */
-val PillShape = RoundedCornerShape(50)
+val PillShape = RoundedCornerShape(4.dp)
 
 @Composable
 fun AppCard(
@@ -75,7 +75,8 @@ fun AppCard(
 @Composable
 fun SectionHeader(title: String, modifier: Modifier = Modifier, help: HelpTopic? = null, trailing: @Composable (() -> Unit)? = null) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = MaterialTheme.typography.titleMedium, color = Palette.Text)
+        Text(title.uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
+            letterSpacing = 1.4.sp, color = Palette.TextDim)
         if (help != null) {
             Spacer(Modifier.width(4.dp))
             HelpButton(help, size = 18.dp)
@@ -92,7 +93,7 @@ fun HelpButton(topic: HelpTopic, size: Dp = 18.dp, tint: Color = Palette.TextFai
     Box(
         Modifier
             .size(size + 14.dp)
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(4.dp))
             .clickable { open = true },
         contentAlignment = Alignment.Center,
     ) {
@@ -114,7 +115,7 @@ fun HelpSheet(topic: HelpTopic, onDismiss: () -> Unit) {
     ) {
         Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 32.dp).navigationBarsPadding()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(36.dp).clip(CircleShape).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(36.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
                     Icon(Icons.AutoMirrored.Outlined.HelpOutline, null, tint = Palette.AccentSoft, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(12.dp))
@@ -138,17 +139,18 @@ fun StatTile(
     val color by animateColorAsState(valueColor, label = "statColor")
     Column(
         modifier
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(4.dp))
             .background(Palette.Surface)
-            .padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 14.dp)
+            .border(1.dp, Palette.Outline, RoundedCornerShape(4.dp))
+            .padding(start = 12.dp, end = 2.dp, top = 4.dp, bottom = 10.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = Palette.TextDim, maxLines = 1,
+            Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.sp, color = Palette.TextDim, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (help != null) HelpButton(help, size = 15.dp) else Spacer(Modifier.height(29.dp))
         }
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(value, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = color, maxLines = 1,
+            Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = color, maxLines = 1,
                 style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = "tnum"))
             if (unit != null) {
                 Spacer(Modifier.width(3.dp))
@@ -161,7 +163,8 @@ fun StatTile(
 @Composable
 fun Pill(text: String, color: Color, modifier: Modifier = Modifier, icon: ImageVector? = null) {
     Row(
-        modifier.clip(CircleShape).background(color.copy(alpha = 0.14f)).padding(horizontal = 10.dp, vertical = 5.dp),
+        modifier.clip(RoundedCornerShape(3.dp)).background(color.copy(alpha = 0.09f))
+            .border(1.dp, color.copy(alpha = 0.55f), RoundedCornerShape(3.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
@@ -177,22 +180,23 @@ fun SegmentedToggle(options: List<String>, selected: Int, onSelect: (Int) -> Uni
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (Palette.dark) Palette.Surface2 else Palette.Surface3)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+            .clip(RoundedCornerShape(4.dp))
+            .border(1.dp, Palette.OutlineStrong, RoundedCornerShape(4.dp))
+            .background(Palette.Surface)
+            .padding(3.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         options.forEachIndexed { i, label ->
             val sel = i == selected
-            val bg by animateColorAsState(if (sel) (if (Palette.dark) Palette.Surface3 else Palette.Surface) else Color.Transparent, label = "seg")
-            val fg by animateColorAsState(if (sel) Palette.Text else Palette.TextDim, label = "segFg")
+            val bg by animateColorAsState(if (sel) Palette.Accent else Color.Transparent, label = "seg")
+            val fg by animateColorAsState(if (sel) Palette.OnAccent else Palette.TextDim, label = "segFg")
             Box(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(2.dp))
                     .background(bg)
                     .clickable(enabled = enabled) { onSelect(i) }
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 11.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(label, style = MaterialTheme.typography.labelLarge, color = if (enabled) fg else Palette.TextFaint)
@@ -203,7 +207,8 @@ fun SegmentedToggle(options: List<String>, selected: Int, onSelect: (Int) -> Uni
 
 @Composable
 fun IconBadge(icon: ImageVector, color: Color, modifier: Modifier = Modifier, size: Dp = 40.dp) {
-    Box(modifier.size(size).clip(CircleShape).background(color.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+    Box(modifier.size(size).clip(RoundedCornerShape(4.dp)).background(color.copy(alpha = 0.10f))
+        .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(4.dp)), contentAlignment = Alignment.Center) {
         Icon(icon, null, tint = color, modifier = Modifier.size(size * 0.5f))
     }
 }

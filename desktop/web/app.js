@@ -140,7 +140,7 @@ function drawChart(canvas, samples, avg) {
   const maxV = Math.max(1, ...vals) * 1.15; const nice = [1, 2, 2.5, 5, 10]; const e = Math.pow(10, Math.floor(Math.log10(maxV)));
   const top = nice.map((x) => x * e).find((x) => x >= maxV) || 10 * e;
   const n = Math.max(2, samples.length); const x = (i) => left + (n <= 1 ? W / 2 : i * W / (n - 1)); const y = (v) => H - Math.min(1, v / top) * H;
-  c.font = '11px Manrope'; c.fillStyle = col('--faint'); c.strokeStyle = 'rgba(0,0,0,0.06)'; c.lineWidth = 1;
+  c.font = '11px PlexMono'; c.fillStyle = col('--faint'); c.strokeStyle = 'rgba(0,0,0,0.06)'; c.lineWidth = 1;
   for (let k = 0; k <= 4; k++) { const v = top * k / 4, yy = y(v); c.beginPath(); c.moveTo(left, yy); c.lineTo(w, yy); c.stroke(); c.fillText(ms(v), 0, Math.max(10, yy + 4)); }
   const bw = Math.max(2, W / n * 0.6);
   samples.forEach((s, i) => { if (s.status !== 'ok') { c.fillStyle = 'rgba(201,48,44,0.85)'; c.fillRect(x(i) - bw / 2, 0, bw, H); } });

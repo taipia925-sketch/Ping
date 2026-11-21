@@ -115,9 +115,9 @@ fun GuideScreen(
         // ---- Strumenti interattivi ----
         item {
             Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(26.dp))
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
                     .background(Palette.DangerBg)
-                    .border(1.dp, Palette.Red.copy(alpha = 0.25f), RoundedCornerShape(26.dp))
+                    .border(1.dp, Palette.Red.copy(alpha = 0.25f), RoundedCornerShape(4.dp))
                     .clickable(onClick = onOpenDiagnosis).padding(20.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -177,7 +177,7 @@ fun GuideScreen(
                 Text("Valori tipici misurati da un telefono in Wi-Fi. Per vederli dal vivo apri il Laboratorio.",
                     style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 examples.forEach { ex ->
-                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(14.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(ex.title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                             Spacer(Modifier.width(8.dp))
@@ -218,7 +218,7 @@ fun GuideScreen(
                 Step(6, "Interrompi, salva, condividi", "Premi «Interrompi test» quando vuoi. Il test è salvato nello Storico: puoi copiarlo, esportarlo, ripeterlo o confrontarlo.")
                 Spacer(Modifier.height(4.dp))
                 Text("Prova ora →", style = MaterialTheme.typography.labelLarge, color = Palette.AccentSoft,
-                    modifier = Modifier.clip(CircleShape).clickable(onClick = onTryNow).padding(horizontal = 12.dp, vertical = 8.dp))
+                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable(onClick = onTryNow).padding(horizontal = 12.dp, vertical = 8.dp))
             }
         }
         item {
@@ -241,7 +241,7 @@ fun GuideScreen(
                 Text(
                     "C:\\> ping 192.168.1.100\n\nEsecuzione di Ping 192.168.1.100 con 32 byte di dati:\nRisposta da 192.168.1.100: byte=32 durata=3ms TTL=64",
                     fontFamily = Mono, fontSize = 12.sp, color = Palette.TextDim,
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF0C0C0C)).padding(12.dp),
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Color(0xFF0C0C0C)).padding(12.dp),
                 )
                 Spacer(Modifier.height(10.dp))
                 Bullet("Uguale: stesso tipo di pacchetto (ICMP Echo), 32 byte di dati con lo stesso contenuto, 4 richieste nel test singolo, attesa massima di 4 secondi per ogni risposta, TTL in uscita 128, stesso modo di calcolare minimo, massimo, medio e persi.")
@@ -282,7 +282,7 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun ToolCard(icon: ImageVector, title: String, text: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
     Column(
-        modifier.height(150.dp).clip(RoundedCornerShape(24.dp)).background(Palette.Surface)
+        modifier.height(150.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface)
             .clickable(onClick = onClick).padding(16.dp)
     ) {
         IconBadge(icon, color, size = 42.dp)
@@ -303,13 +303,13 @@ private fun TopicChips(topics: List<HelpTopic>, onClick: (HelpTopic) -> Unit) {
 @Composable
 private fun TopicChip(t: HelpTopic, onClick: () -> Unit) {
     Text(t.title, style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
-        modifier = Modifier.clip(CircleShape).background(Palette.Surface2).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp))
+        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp))
 }
 
 /** Schema semplice: scheda e telefono nella stessa rete, il gateway porta verso le altre reti. */
 @Composable
 private fun NetDiagram() {
-    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(14.dp)) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(14.dp)) {
         Text("RETE LOCALE  192.168.1.1 – 192.168.1.254", style = MaterialTheme.typography.labelSmall, color = Palette.Teal)
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -327,7 +327,7 @@ private fun NetDiagram() {
 
 @Composable
 private fun DiagramNode(name: String, ip: String) {
-    Column(Modifier.clip(RoundedCornerShape(12.dp)).background(Palette.Surface3).padding(horizontal = 10.dp, vertical = 6.dp)) {
+    Column(Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface3).padding(horizontal = 10.dp, vertical = 6.dp)) {
         Text(name, style = MaterialTheme.typography.labelMedium)
         Text(ip, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = Palette.TextDim)
     }
@@ -353,8 +353,8 @@ private fun GuideSection(icon: ImageVector, title: String, color: Color, initial
 @Composable
 private fun Step(n: Int, title: String, text: String) {
     Row(Modifier.padding(vertical = 8.dp)) {
-        Box(Modifier.size(30.dp).clip(CircleShape).background(Palette.Accent), contentAlignment = Alignment.Center) {
-            Text("$n", color = Color.White, fontWeight = FontWeight.Bold)
+        Box(Modifier.size(30.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent), contentAlignment = Alignment.Center) {
+            Text("$n", color = Palette.OnAccent, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.width(14.dp))
         Column {

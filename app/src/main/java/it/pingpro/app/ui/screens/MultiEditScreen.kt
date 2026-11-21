@@ -99,7 +99,7 @@ fun MultiEditScreen(
     ) {
         item { BackHeader("Schede da controllare", "Fino a ${TargetParser.MAX_TARGETS} schede insieme · ora ${targets.size}", onBack) }
         if (room == 0) item {
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.AmberBg).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.AmberBg).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("L'elenco è pieno (${TargetParser.MAX_TARGETS} schede). Per aggiungerne altre togli qualche scheda o premi «Svuota» in fondo.",
                     style = MaterialTheme.typography.titleSmall, color = Palette.Amber, modifier = Modifier.weight(1f))
                 TextButton(onClick = { onChange(emptyList(), null) }) { Text("Svuota", color = Palette.Red) }
@@ -112,7 +112,7 @@ fun MultiEditScreen(
                 Text("Un gruppo è un elenco di schede con un nome, ad esempio tutte le schede di un apparato.", style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 Spacer(Modifier.height(6.dp))
                 groups.forEach { g ->
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { onLoadGroup(g); toast("Caricato «${g.name}»") }.padding(vertical = 6.dp),
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).clickable { onLoadGroup(g); toast("Caricato «${g.name}»") }.padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Folder, null, tint = if (g.name == listName) Palette.Accent else Palette.TextDim)
                         Spacer(Modifier.width(12.dp))
@@ -140,9 +140,9 @@ fun MultiEditScreen(
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(from, { from = it.trim() }, label = { Text("Da") }, singleLine = true, modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp), colors = colors, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        shape = RoundedCornerShape(4.dp), colors = colors, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     OutlinedTextField(to, { to = it.trim() }, label = { Text("A") }, singleLine = true, modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp), colors = colors, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                        shape = RoundedCornerShape(4.dp), colors = colors, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 }
                 val size = TargetParser.rangeSize(from, to)
                 val incomplete = from.endsWith(".") || to.endsWith(".")
@@ -176,7 +176,7 @@ fun MultiEditScreen(
                 Spacer(Modifier.height(4.dp))
                 devices.sortedBy { it.name.lowercase() }.forEach { d ->
                     val inList = targets.any { it.address.equals(d.address, true) }
-                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable {
+                    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).clickable {
                         if (inList) onChange(targets.filterNot { it.address.equals(d.address, true) }, listName)
                         else if (room > 0) onChange(targets + MultiTarget(d.address, d.name), listName)
                         else toast("Raggiunto il massimo di ${TargetParser.MAX_TARGETS} schede")
@@ -199,7 +199,7 @@ fun MultiEditScreen(
                     style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 Spacer(Modifier.height(10.dp))
                 OutlinedTextField(pasted, { pasted = it }, placeholder = { Text("192.168.1.100\n192.168.1.105\n192.168.1.110-115") },
-                    modifier = Modifier.fillMaxWidth().height(130.dp), shape = RoundedCornerShape(16.dp), colors = colors,
+                    modifier = Modifier.fillMaxWidth().height(130.dp), shape = RoundedCornerShape(4.dp), colors = colors,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
                 val parsed = remember(pasted) { TargetParser.parse(pasted, 1000) }
                 val pastePreview = remember(parsed, targets) { TargetParser.previewAdd(parsed.addresses, targets.map { it.address }) }
@@ -235,7 +235,7 @@ fun MultiEditScreen(
             Text("L'elenco è vuoto.", style = MaterialTheme.typography.bodyMedium, color = Palette.TextFaint, modifier = Modifier.padding(start = 4.dp))
         }
         items(targets, key = { it.address }) { t ->
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Palette.Surface).padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface).padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(t.name ?: t.address, style = MaterialTheme.typography.titleSmall)
@@ -248,13 +248,13 @@ fun MultiEditScreen(
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 6.dp)) {
-                Box(Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2)
+                Box(Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface2)
                     .clickable(enabled = targets.isNotEmpty()) { saveDialog = true }, contentAlignment = Alignment.Center) {
                     Text("Salva come gruppo", color = if (targets.isNotEmpty()) Palette.Text else Palette.TextFaint, fontWeight = FontWeight.SemiBold)
                 }
-                Box(Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Accent).clickable(onClick = onBack),
+                Box(Modifier.weight(1f).height(54.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent).clickable(onClick = onBack),
                     contentAlignment = Alignment.Center) {
-                    Text("Fatto", color = Color.White, style = MaterialTheme.typography.labelLarge)
+                    Text("Fatto", color = Palette.OnAccent, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -271,7 +271,7 @@ fun MultiEditScreen(
                     Text("Dai un nome all'elenco, ad esempio il nome dell'apparato. Se esiste già un gruppo con lo stesso nome viene aggiornato.",
                         style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(name, { name = it }, label = { Text("Nome del gruppo") }, singleLine = true, shape = RoundedCornerShape(16.dp), colors = colors)
+                    OutlinedTextField(name, { name = it }, label = { Text("Nome del gruppo") }, singleLine = true, shape = RoundedCornerShape(4.dp), colors = colors)
                 }
             },
             confirmButton = { TextButton(onClick = { onSaveGroup(name); saveDialog = false; toast("Gruppo «${name.trim()}» salvato") }, enabled = name.isNotBlank()) { Text("Salva") } },

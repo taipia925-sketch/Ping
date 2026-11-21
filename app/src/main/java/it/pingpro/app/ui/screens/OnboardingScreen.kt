@@ -100,12 +100,12 @@ fun OnboardingScreen(onDone: () -> Unit, onTour: (() -> Unit)? = null) {
         }
         val last = pager.currentPage == pages.lastIndex
         Box(
-            Modifier.padding(horizontal = 24.dp).padding(bottom = 20.dp).fillMaxWidth().height(60.dp).clip(RoundedCornerShape(30.dp))
+            Modifier.padding(horizontal = 24.dp).padding(bottom = 20.dp).fillMaxWidth().height(60.dp).clip(RoundedCornerShape(4.dp))
                 .background(Palette.Accent)
                 .clickable { if (last) onDone() else scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
             contentAlignment = Alignment.Center,
         ) {
-            Text(if (last) "Inizia" else "Avanti", color = Color.White, style = MaterialTheme.typography.labelLarge, fontSize = 17.sp)
+            Text(if (last) "Inizia" else "Avanti", color = Palette.OnAccent, style = MaterialTheme.typography.labelLarge, fontSize = 17.sp)
         }
         if (last && onTour != null) {
             TextButton(onClick = onTour, modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 12.dp)) {
@@ -136,7 +136,7 @@ private fun PulseArt() {
 private fun AddressArt() {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(Palette.Surface2).border(1.dp, Palette.Accent.copy(alpha = 0.5f), RoundedCornerShape(20.dp)).padding(18.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).border(1.dp, Palette.Accent.copy(alpha = 0.5f), RoundedCornerShape(4.dp)).padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Outlined.Router, null, tint = Palette.AccentSoft)
@@ -174,7 +174,7 @@ private fun StatusArt() {
             Triple("NON RISPONDE", Palette.Red, listOf<Double?>(2.0, 2.4, 2.1, null, null, null, null, null, null, null, null, null)),
         ).forEach { (label, color, values) ->
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(14.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.Wifi, null, tint = color)
@@ -190,7 +190,7 @@ private fun StatusArt() {
 private fun HelpArt() {
     Row(horizontalArrangement = Arrangement.spacedBy(20.dp), verticalAlignment = Alignment.CenterVertically) {
         listOf(Icons.AutoMirrored.Outlined.HelpOutline to Palette.AccentSoft, Icons.Outlined.History to Palette.Teal).forEach { (icon, c) ->
-            Box(Modifier.size(96.dp).clip(RoundedCornerShape(30.dp)).background(c.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(96.dp).clip(RoundedCornerShape(4.dp)).background(c.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
                 Icon(icon, null, tint = c, modifier = Modifier.size(46.dp))
             }
         }

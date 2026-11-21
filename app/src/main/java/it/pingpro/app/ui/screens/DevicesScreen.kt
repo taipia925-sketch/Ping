@@ -109,7 +109,7 @@ fun DevicesScreen(
                 if (last != null) {
                     Spacer(Modifier.height(12.dp))
                     Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Palette.Surface2).padding(horizontal = 12.dp, vertical = 10.dp),
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         val ok = last.received > 0 && last.lost == 0
@@ -146,17 +146,17 @@ fun DeviceEditorDialog(draft: DeviceDraft, onDismiss: () -> Unit, onSave: (Devic
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = Palette.Surface,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(4.dp),
         title = { Text(if (draft.id == null) "Nuova scheda" else "Modifica scheda") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(name, { name = it }, label = { Text("Nome (es. Quadro linea 3)") }, singleLine = true, colors = colors, shape = RoundedCornerShape(16.dp))
+                OutlinedTextField(name, { name = it }, label = { Text("Nome (es. Quadro linea 3)") }, singleLine = true, colors = colors, shape = RoundedCornerShape(4.dp))
                 OutlinedTextField(
-                    address, { address = it.trim() }, label = { Text("Indirizzo IP") }, singleLine = true, colors = colors, shape = RoundedCornerShape(16.dp),
+                    address, { address = it.trim() }, label = { Text("Indirizzo IP") }, singleLine = true, colors = colors, shape = RoundedCornerShape(4.dp),
                     isError = address.isNotEmpty() && !NetworkResolver.isValidTarget(address),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                 )
-                OutlinedTextField(note, { note = it }, label = { Text("Note (facoltative)") }, colors = colors, shape = RoundedCornerShape(16.dp), maxLines = 3)
+                OutlinedTextField(note, { note = it }, label = { Text("Note (facoltative)") }, colors = colors, shape = RoundedCornerShape(4.dp), maxLines = 3)
             }
         },
         confirmButton = {

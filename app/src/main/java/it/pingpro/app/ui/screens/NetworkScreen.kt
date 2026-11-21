@@ -173,9 +173,9 @@ private fun GatewayQuickRow(gw: String, running: Boolean, onPing: (String) -> Un
                 .clickable(enabled = !running) { onPing(gw) },
             horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Outlined.NetworkPing, null, tint = if (running) Palette.TextFaint else Color.White, modifier = Modifier.size(20.dp))
+            Icon(Icons.Outlined.NetworkPing, null, tint = if (running) Palette.TextFaint else Palette.OnAccent, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Ping gateway", color = if (running) Palette.TextFaint else Color.White, style = MaterialTheme.typography.labelLarge)
+            Text("Ping gateway", color = if (running) Palette.TextFaint else Palette.OnAccent, style = MaterialTheme.typography.labelLarge)
         }
         Row(
             Modifier.weight(1f).height(54.dp).clip(PillShape).background(Palette.AccentBg).clickable { onUse(gw) },
@@ -259,9 +259,9 @@ private fun InfoRow(
         }
         if (pingable && value != null) {
             Text("Usa", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
-                modifier = Modifier.clip(CircleShape).clickable { onUse(value) }.padding(horizontal = 10.dp, vertical = 8.dp))
+                modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable { onUse(value) }.padding(horizontal = 10.dp, vertical = 8.dp))
             IconButton(onClick = { onPing(value) }, enabled = !running) {
-                Box(Modifier.size(36.dp).clip(CircleShape).background(Palette.Accent.copy(alpha = if (running) 0.06f else 0.18f)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(36.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent.copy(alpha = if (running) 0.06f else 0.18f)), contentAlignment = Alignment.Center) {
                     Icon(Icons.Outlined.NetworkPing, "Ping $value", tint = if (running) Palette.TextFaint else Palette.AccentSoft, modifier = Modifier.size(20.dp))
                 }
             }
@@ -302,7 +302,7 @@ private fun PromptCard(interfaces: List<NetInterfaceInfo>, onCopy: (String) -> U
             Spacer(Modifier.width(8.dp))
             Text(if (all) "ipconfig /all" else "ipconfig", fontFamily = Mono, fontSize = 13.sp, color = Palette.Text, modifier = Modifier.weight(1f))
             Text(if (all) "Ridotto" else "/all", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
-                modifier = Modifier.clip(CircleShape).clickable { all = !all }.padding(horizontal = 10.dp, vertical = 8.dp))
+                modifier = Modifier.clip(RoundedCornerShape(4.dp)).clickable { all = !all }.padding(horizontal = 10.dp, vertical = 8.dp))
             IconButton(onClick = { onCopy(text) }) { Icon(Icons.Outlined.ContentCopy, "Copia", tint = Palette.TextDim) }
         }
         Box(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(14.dp)) {

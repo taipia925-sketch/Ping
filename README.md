@@ -19,7 +19,7 @@ rete Wi-Fi/Ethernet a cui è collegato.
 
 ---
 
-**Design (v2.0):** interfaccia chiara in stile Samsung One UI, carattere Manrope (licenza SIL OFL, `docs/licenses/Manrope-OFL.txt`); tema scuro e automatico disponibili in Impostazioni › Aspetto.
+**Design (v2.3):** stile «Scheda tecnica» (carta, inchiostro, filetti; il rosso solo per gli allarmi), caratteri IBM Plex Sans Condensed e IBM Plex Mono (licenza SIL OFL, `docs/licenses/IBM-Plex-OFL.txt`); tema scuro e automatico disponibili in Impostazioni › Aspetto.
 
 ![Tema chiaro e scuro](docs/screenshots/theme.png)
 

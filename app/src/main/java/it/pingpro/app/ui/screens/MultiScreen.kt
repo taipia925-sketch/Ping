@@ -140,6 +140,7 @@ fun MultiScreen(
     onPingSingle: (String) -> Unit,
     onCopy: () -> Unit,
     onShare: (Boolean) -> Unit,
+    lan: it.pingpro.app.ping.NetInterfaceInfo? = null,
 ) {
     var sortProblems by remember { mutableStateOf(true) }
     var detail by remember { mutableStateOf<String?>(null) }
@@ -148,7 +149,12 @@ fun MultiScreen(
     // Orologio che fa aggiornare la durata nel titolo durante il test.
     var tick by remember { mutableLongStateOf(0L) }
     LaunchedEffect(state.running) { while (state.running) { tick = System.currentTimeMillis(); delay(500) } }
-    @Suppress("UNUSED_EXPRESSION") tick
+    // Schede fuori dalla rete a cui è collegato ora il telefono (es. elenco fatto su un'altra rete).
+    val offNet = remember(targets, lan?.ipv4, lan?.prefixLength) {
+        val ip = lan?.ipv4; val pfx = lan?.prefixLength
+        if (ip == null || pfx == null) emptyList()
+        else targets.filter { t -> it.pingpro.app.ping.IpConfig.toInt(t.address) != null && !it.pingpro.app.ping.IpConfig.sameSubnet(t.address, ip, pfx) }
+    }
 
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -161,7 +167,7 @@ fun MultiScreen(
                     Text(if (hasRun) (state.groupName ?: "Più schede") else "Test", style = MaterialTheme.typography.headlineLarge,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        if (hasRun) "${state.targets.size} schede · ${if (state.mode == PingMode.CONTINUOUS) "continuo" else "singolo"} · ${Format.clock(elapsedOf(state))}"
+                        if (hasRun) "${state.targets.size} schede · ${if (state.mode == PingMode.CONTINUOUS) "continuo" else "singolo"} · ${tick.let { Format.clock(elapsedOf(state)) }}"
                         else "Controlla più schede insieme",
                         style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim,
                     )
@@ -170,13 +176,14 @@ fun MultiScreen(
             }
         }
         item { SingleMultiSwitch(true, !state.running && !singleRunning) { if (!it) onSwitchSingle() } }
+        if (offNet.isNotEmpty() && lan?.ipv4 != null) item { OffNetworkWarning(offNet.size, targets.size, lan) }
 
         if (!state.running) {
             item {
             AppCard {
                 SectionHeader("Schede da controllare", help = HelpTopic.MULTI) {
                     if (!state.running) Row(
-                        Modifier.clip(CircleShape).background(Palette.Surface2).clickable(onClick = onEdit).padding(horizontal = 12.dp, vertical = 6.dp),
+                        Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable(onClick = onEdit).padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(Icons.Outlined.Edit, null, tint = Palette.AccentSoft, modifier = Modifier.size(15.dp))
@@ -190,7 +197,7 @@ fun MultiScreen(
                         style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim)
                 } else {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(14.dp)).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(44.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
                             Text("${targets.size}", style = MaterialTheme.typography.titleLarge, color = Palette.AccentSoft)
                         }
                         Spacer(Modifier.width(12.dp))
@@ -206,9 +213,9 @@ fun MultiScreen(
                         items(groups, key = { it.id }) { g ->
                             val sel = g.name == listName
                             Row(
-                                Modifier.clip(CircleShape)
+                                Modifier.clip(RoundedCornerShape(4.dp))
                                     .background(if (sel) Palette.Accent.copy(alpha = 0.18f) else Palette.Surface2)
-                                    .border(1.dp, if (sel) Palette.Accent.copy(alpha = 0.5f) else Palette.Outline, CircleShape)
+                                    .border(1.dp, if (sel) Palette.Accent.copy(alpha = 0.5f) else Palette.Outline, RoundedCornerShape(4.dp))
                                     .clickable { onLoadGroup(g) }.padding(horizontal = 14.dp, vertical = 9.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -254,7 +261,7 @@ fun MultiScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 4.dp)) {
                     Text("Schede", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Text(if (sortProblems) "Problemi prima" else "Ordine elenco", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft,
-                        modifier = Modifier.clip(CircleShape).background(Palette.Surface2).clickable { sortProblems = !sortProblems }.padding(horizontal = 12.dp, vertical = 7.dp))
+                        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable { sortProblems = !sortProblems }.padding(horizontal = 12.dp, vertical = 7.dp))
                 }
             }
             val list = if (sortProblems) state.targets.sortedBy {
@@ -303,13 +310,13 @@ fun MultiScreen(
                 EventsCard(s.events)
                 if (!state.running) {
                     Row(
-                        Modifier.fillMaxWidth().height(54.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Accent)
+                        Modifier.fillMaxWidth().height(54.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent)
                             .clickable { detail = null; onPingSingle(open.target.address) },
                         horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(Icons.Outlined.NetworkPing, null, tint = Color.White)
+                        Icon(Icons.Outlined.NetworkPing, null, tint = Palette.OnAccent)
                         Spacer(Modifier.width(8.dp))
-                        Text("Test solo su questa scheda", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Test solo su questa scheda", color = Palette.OnAccent, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(Modifier.height(12.dp))
@@ -362,7 +369,7 @@ private fun MultiSummary(m: MultiState) {
         }
         AnimatedVisibility(down.isNotEmpty()) {
             Row(
-                Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.DangerBg).padding(14.dp),
+                Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.DangerBg).padding(14.dp),
                 verticalAlignment = Alignment.Top,
             ) {
                 Icon(Icons.Outlined.WarningAmber, null, tint = Palette.Red, modifier = Modifier.size(20.dp))
@@ -372,7 +379,7 @@ private fun MultiSummary(m: MultiState) {
             }
         }
         if (!m.running && down.isEmpty() && m.warnCount == 0 && m.waitingCount == 0) {
-            Row(Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.GreenBg).padding(14.dp)) {
+            Row(Modifier.padding(top = 16.dp).fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.GreenBg).padding(14.dp)) {
                 Text("Tutte le schede hanno risposto a ogni richiesta.", style = MaterialTheme.typography.titleSmall, color = Palette.Green)
             }
         }
@@ -400,14 +407,14 @@ private fun TargetRow(t: TargetState, settings: AppSettings, last: Boolean, onCl
     }
     Column(Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(bg), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(38.dp).clip(RoundedCornerShape(4.dp)).background(bg), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(10.dp).clip(CircleShape).background(c))
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(t.label, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    t.error ?: ((if (t.name != null) "${t.ip ?: t.target.address} · " else "") + "${t.stats.received}/${t.stats.sent} · ${Format.percent(t.stats.lossPercent)} persi"),
+                    t.error ?: ((if (t.name != null) "${t.ip ?: t.target.address} · " else "") + (if (t.stats.sent == 0) (if (!t.finished) "in attesa della prima risposta…" else "nessuna richiesta") else "${t.stats.received}/${t.stats.sent} · ${Format.percent(t.stats.lossPercent)} persi")),
                     style = MaterialTheme.typography.bodySmall, color = if (t.stats.lost > 0 || t.error != null) Palette.Amber else Palette.TextDim,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
@@ -432,10 +439,31 @@ private fun TargetRow(t: TargetState, settings: AppSettings, last: Boolean, onCl
 private fun MsValue(v: Double, settings: AppSettings, caption: String?) {
     Column(horizontalAlignment = Alignment.End) {
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(Format.ms(v), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, fontFamily = it.pingpro.app.ui.theme.Manrope,
+            Text(Format.ms(v), fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, fontFamily = it.pingpro.app.ui.theme.Sans,
                 color = if (v >= settings.highLatencyMs) Palette.Amber else Palette.Text)
             Text(" ms", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 2.dp))
         }
         if (caption != null) Text(caption, style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
+    }
+}
+
+/** Avviso: alcune schede dell'elenco non sono nella rete a cui è collegato ora il telefono. */
+@Composable
+private fun OffNetworkWarning(off: Int, total: Int, lan: it.pingpro.app.ping.NetInterfaceInfo) {
+    val range = it.pingpro.app.ping.IpConfig.hostRange(lan.ipv4!!, lan.prefixLength ?: 24)
+    AppCard(color = Palette.AmberBg, borderColor = Palette.Amber) {
+        Row(verticalAlignment = Alignment.Top) {
+            Icon(Icons.Outlined.WarningAmber, null, tint = Palette.Amber, modifier = Modifier.size(22.dp))
+            Spacer(Modifier.width(10.dp))
+            Column {
+                Text(if (off == total) "Queste schede sono su un'altra rete" else "$off schede su $total sono su un'altra rete",
+                    style = MaterialTheme.typography.titleSmall, color = Palette.Text)
+                Spacer(Modifier.height(4.dp))
+                Text("Il telefono ora è collegato alla rete ${lan.type} ${lan.ipv4}/${lan.prefixLength ?: 24}${range?.let { " (${it.first} – ${it.second})" } ?: ""}. " +
+                    "Gli indirizzi fuori da questo intervallo quasi certamente non risponderanno: collegati alla rete delle schede, " +
+                    "oppure rifai «Cerca dispositivi» su questa rete.",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
+            }
+        }
     }
 }

@@ -77,6 +77,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -108,7 +109,7 @@ import it.pingpro.app.ui.Format
 import it.pingpro.app.ui.TestUi
 import it.pingpro.app.ui.components.AppCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import it.pingpro.app.ui.theme.Manrope
+import it.pingpro.app.ui.theme.Sans
 import it.pingpro.app.ui.components.HelpSheet
 import it.pingpro.app.ui.components.PillShape
 import it.pingpro.app.ui.components.HelpButton
@@ -244,7 +245,7 @@ private fun TargetCard(
         Spacer(Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(
-                Modifier.clip(CircleShape).background(Palette.AccentBg).clickable(onClick = onOpenScan).padding(horizontal = 12.dp, vertical = 8.dp),
+                Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.AccentBg).clickable(onClick = onOpenScan).padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.Search, null, tint = Palette.AccentSoft, modifier = Modifier.size(16.dp))
@@ -252,7 +253,7 @@ private fun TargetCard(
                 Text("Cerca dispositivi", style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft)
             }
             Row(
-                Modifier.tourTarget("ipconfig").clip(CircleShape).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 8.dp),
+                Modifier.tourTarget("ipconfig").clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable(onClick = onOpenNetwork).padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.Lan, null, tint = Palette.AccentSoft, modifier = Modifier.size(16.dp))
@@ -266,9 +267,9 @@ private fun TargetCard(
             Modifier
                 .fillMaxWidth()
                 .tourTarget("address")
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(4.dp))
                 .background(Palette.Surface2)
-                .border(1.dp, borderColor, RoundedCornerShape(20.dp))
+                .border(1.dp, borderColor, RoundedCornerShape(4.dp))
                 .padding(start = 16.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -328,9 +329,9 @@ private fun TargetCard(
                     val sel = gateway == vm.target
                     Row(
                         Modifier
-                            .clip(CircleShape)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(if (sel) Palette.Teal.copy(alpha = 0.22f) else Palette.Teal.copy(alpha = 0.10f))
-                            .border(1.dp, Palette.Teal.copy(alpha = if (sel) 0.7f else 0.35f), CircleShape)
+                            .border(1.dp, Palette.Teal.copy(alpha = if (sel) 0.7f else 0.35f), RoundedCornerShape(4.dp))
                             .clickable(enabled = !running) { vm.target = gateway }
                             .padding(horizontal = 14.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -344,9 +345,9 @@ private fun TargetCard(
                     val sel = addr.equals(vm.target, true)
                     Row(
                         Modifier
-                            .clip(CircleShape)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(if (sel) Palette.Accent.copy(alpha = 0.18f) else Palette.Surface2)
-                            .border(1.dp, if (sel) Palette.Accent.copy(alpha = 0.5f) else Palette.Outline, CircleShape)
+                            .border(1.dp, if (sel) Palette.Accent.copy(alpha = 0.5f) else Palette.Outline, RoundedCornerShape(4.dp))
                             .clickable(enabled = !running) { vm.target = addr }
                             .padding(horizontal = 14.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -403,15 +404,15 @@ fun StartStopButton(running: Boolean, enabled: Boolean, progress: Float?, onStar
     ) {
         if (progress != null) {
             Box(Modifier.fillMaxSize()) {
-                Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(60.dp).background(Color.White.copy(alpha = 0.16f)))
+                Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(60.dp).background(Palette.OnAccent.copy(alpha = 0.16f)))
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(if (running) Icons.Outlined.Stop else Icons.Outlined.PlayArrow, null,
-                tint = if (enabled) Color.White else Palette.TextFaint, modifier = Modifier.size(24.dp))
+                tint = if (enabled) Palette.OnAccent else Palette.TextFaint, modifier = Modifier.size(24.dp))
             Spacer(Modifier.width(8.dp))
-            Text(if (running) "Interrompi test" else "Avvia test", fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Manrope,
-                color = if (enabled) Color.White else Palette.TextFaint)
+            Text(if (running) "Interrompi test" else "Avvia test", fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Sans,
+                color = if (enabled) Palette.OnAccent else Palette.TextFaint)
         }
     }
 }
@@ -460,8 +461,9 @@ fun StatusPill(text: String, color: Color) {
         Palette.Red -> Palette.DangerBg
         else -> Palette.Surface2
     }
-    Row(Modifier.clip(CircleShape).background(bg).padding(horizontal = 12.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(9.dp).clip(CircleShape).background(color))
+    Row(Modifier.clip(RoundedCornerShape(3.dp)).background(bg).border(1.dp, color.copy(alpha = 0.6f), RoundedCornerShape(3.dp))
+        .padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(8.dp).background(color))
         Spacer(Modifier.width(8.dp))
         Text(text, style = MaterialTheme.typography.labelMedium, color = color, fontWeight = FontWeight.ExtraBold, letterSpacing = 0.6.sp)
     }
@@ -511,6 +513,16 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
                 Text(if (lastSample?.status?.isLost == true) "—" else "···", style = MaterialTheme.typography.displayLarge,
                     color = if (lastSample?.status?.isLost == true) Palette.Red else Palette.TextFaint)
             }
+            if (down) {
+                Spacer(Modifier.weight(1f))
+                // Il «timbro» rosso: si riconosce da lontano anche con il telefono appoggiato sul quadro.
+                Text(
+                    "NON\nRISPONDE", color = Palette.Red, fontWeight = FontWeight.Bold, fontSize = 20.sp, lineHeight = 21.sp,
+                    letterSpacing = 2.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 14.dp, end = 6.dp).rotate(-7f)
+                        .border(3.dp, Palette.Red, RoundedCornerShape(4.dp)).padding(horizontal = 12.dp, vertical = 6.dp),
+                )
+            }
         }
         Spacer(Modifier.height(6.dp))
         val sentence = buildString {
@@ -532,7 +544,7 @@ fun StatusHero(s: SessionState, settings: AppSettings) {
         AnimatedVisibility(down, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             val since = s.samples.takeLast(s.consecutiveLost).firstOrNull()?.timestamp
             Row(
-                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Surface).padding(14.dp),
+                Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface).padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.WarningAmber, null, tint = Palette.Red)
@@ -572,12 +584,13 @@ fun StatsGrid(s: SessionState, settings: AppSettings) {
 fun MiniStat(label: String, value: Double?, help: HelpTopic, modifier: Modifier, color: Color? = null) {
     var open by remember { mutableStateOf(false) }
     Column(
-        modifier.clip(RoundedCornerShape(20.dp)).background(Palette.Surface).clickable { open = true }.padding(horizontal = 12.dp, vertical = 12.dp)
+        modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface).border(1.dp, Palette.Outline, RoundedCornerShape(4.dp))
+            .clickable { open = true }.padding(horizontal = 12.dp, vertical = 12.dp)
     ) {
         Text(label, style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, maxLines = 1)
         Spacer(Modifier.height(4.dp))
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(Format.msOrDash(value), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Manrope, color = color ?: Palette.Text, maxLines = 1)
+            Text(Format.msOrDash(value), fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, fontFamily = Sans, color = color ?: Palette.Text, maxLines = 1)
             if (value != null) Text(" ms", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, modifier = Modifier.padding(bottom = 2.dp))
         }
     }
@@ -589,11 +602,11 @@ fun ChartCard(s: SessionState) {
     var all by remember { mutableStateOf(false) }
     AppCard {
         SectionHeader("Andamento", help = HelpTopic.CHART) {
-            Row(Modifier.clip(CircleShape).background(Palette.Surface2).padding(3.dp)) {
+            Row(Modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(3.dp)) {
                 listOf("Ultimi 60" to false, "Tutto" to true).forEach { (label, v) ->
                     Text(label, style = MaterialTheme.typography.labelMedium,
                         color = if (all == v) Palette.Text else Palette.TextDim,
-                        modifier = Modifier.clip(CircleShape).background(if (all == v) Palette.Surface3 else Color.Transparent)
+                        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (all == v) Palette.Surface3 else Color.Transparent)
                             .clickable { all = v }.padding(horizontal = 10.dp, vertical = 5.dp))
                 }
             }
@@ -747,7 +760,7 @@ fun FinishedActions(onCopy: () -> Unit, onShare: () -> Unit, onRepeat: () -> Uni
 @Composable
 fun ActionTile(icon: ImageVector, label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Column(
-        modifier.clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).clickable(onClick = onClick).padding(vertical = 14.dp),
+        modifier.clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable(onClick = onClick).padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(icon, label, tint = Palette.AccentSoft)
@@ -768,7 +781,7 @@ private fun IdleHint() {
             "4" to "Premi «Avvia test» e guarda i risultati in tempo reale. Hai dubbi? Apri la Guida: c'è anche la Diagnosi guidata.",
         ).forEach { (n, t) ->
             Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(26.dp).clip(CircleShape).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(26.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent.copy(alpha = 0.16f)), contentAlignment = Alignment.Center) {
                     Text(n, style = MaterialTheme.typography.labelMedium, color = Palette.AccentSoft)
                 }
                 Spacer(Modifier.width(12.dp))

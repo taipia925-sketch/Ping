@@ -129,8 +129,8 @@ fun HistoryScreen(
             item {
                 TextButton(
                     onClick = { onCompare(selected[0], selected[1]); selecting = false; selected = emptyList() },
-                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Accent),
-                ) { Text("Confronta i 2 test selezionati", color = Color.White, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(6.dp)) }
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Accent),
+                ) { Text("Confronta i 2 test selezionati", color = Palette.OnAccent, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(6.dp)) }
             }
         }
         if (items.isEmpty()) {
@@ -196,9 +196,9 @@ private fun HistoryRow(s: TestSummary, selecting: Boolean, isSel: Boolean, inden
         Modifier
             .padding(start = if (indent) 18.dp else 0.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(4.dp))
             .background(Palette.Surface)
-            .border(1.dp, border, RoundedCornerShape(22.dp))
+            .border(1.dp, border, RoundedCornerShape(4.dp))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -236,8 +236,8 @@ private fun BatchCard(group: List<TestSummary>, open: Boolean, onToggle: () -> U
     val none = group.count { it.received == 0 }
     val color = when { none > 0 -> Palette.Red; warn > 0 -> Palette.Amber; else -> Palette.Green }
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Palette.Surface)
-            .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(22.dp)).clickable(onClick = onToggle).padding(16.dp)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface)
+            .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(4.dp)).clickable(onClick = onToggle).padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Outlined.Folder, null, tint = color)
@@ -393,7 +393,7 @@ fun CompareScreen(vm: MainViewModel, idA: String, idB: String, onBack: () -> Uni
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf(da to colorA, db to colorB).forEach { (d, c) ->
                     AppCard(Modifier.weight(1f), padding = PaddingValues(14.dp), borderColor = c.copy(alpha = 0.4f)) {
-                        Box(Modifier.size(width = 24.dp, height = 4.dp).clip(CircleShape).background(c))
+                        Box(Modifier.size(width = 24.dp, height = 4.dp).clip(RoundedCornerShape(4.dp)).background(c))
                         Spacer(Modifier.height(8.dp))
                         Text(d.summary.displayName, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(Format.dateTime(d.summary.startedAt), style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)

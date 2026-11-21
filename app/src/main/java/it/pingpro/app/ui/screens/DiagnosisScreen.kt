@@ -223,7 +223,7 @@ fun DiagnosisScreen(
                 OutlinedTextField(
                     address, { address = it.trim(); addressConfirmed = null; board = CheckResult(Verdict.TODO) },
                     label = { Text("Indirizzo IP della scheda") }, placeholder = { Text("es. 192.168.1.100") },
-                    singleLine = true, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, shape = RoundedCornerShape(4.dp), modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Palette.Accent, unfocusedBorderColor = Palette.OutlineStrong),
                 )
@@ -286,8 +286,8 @@ fun DiagnosisScreen(
             val (v, text) = diagnosisConclusion(addressConfirmed, gwStep, board)
             AnimatedVisibility(v != Verdict.TODO) {
                 Column(
-                    Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(verdictColor(v).copy(alpha = 0.12f))
-                        .border(1.dp, verdictColor(v).copy(alpha = 0.4f), RoundedCornerShape(24.dp)).padding(20.dp)
+                    Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(verdictColor(v).copy(alpha = 0.12f))
+                        .border(1.dp, verdictColor(v).copy(alpha = 0.4f), RoundedCornerShape(4.dp)).padding(20.dp)
                 ) {
                     Text("Risultato della diagnosi", style = MaterialTheme.typography.titleLarge, color = verdictColor(v))
                     Spacer(Modifier.height(8.dp))
@@ -319,8 +319,8 @@ private fun StepCard(n: Int, title: String, verdict: Verdict, last: Boolean, ena
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         Column(Modifier.width(36.dp).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
             val c = verdictColor(verdict)
-            Box(Modifier.size(32.dp).clip(CircleShape).background(if (verdict == Verdict.TODO) Palette.Surface3 else c.copy(alpha = 0.2f))
-                .border(1.5.dp, if (verdict == Verdict.TODO) Palette.OutlineStrong else c, CircleShape), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(32.dp).clip(RoundedCornerShape(4.dp)).background(if (verdict == Verdict.TODO) Palette.Surface3 else c.copy(alpha = 0.2f))
+                .border(1.5.dp, if (verdict == Verdict.TODO) Palette.OutlineStrong else c, RoundedCornerShape(4.dp)), contentAlignment = Alignment.Center) {
                 when (verdict) {
                     Verdict.OK -> Icon(Icons.Outlined.Check, null, tint = c, modifier = Modifier.size(18.dp))
                     Verdict.FAIL -> Icon(Icons.Outlined.Close, null, tint = c, modifier = Modifier.size(18.dp))
@@ -334,8 +334,8 @@ private fun StepCard(n: Int, title: String, verdict: Verdict, last: Boolean, ena
         }
         Spacer(Modifier.width(12.dp))
         Column(
-            Modifier.weight(1f).padding(bottom = 16.dp).clip(RoundedCornerShape(22.dp)).background(Palette.Surface)
-                .border(1.dp, Palette.Outline, RoundedCornerShape(22.dp)).padding(16.dp)
+            Modifier.weight(1f).padding(bottom = 16.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface)
+                .border(1.dp, Palette.Outline, RoundedCornerShape(4.dp)).padding(16.dp)
         ) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = if (enabled) Palette.Text else Palette.TextFaint)
             Spacer(Modifier.height(8.dp))
@@ -346,8 +346,8 @@ private fun StepCard(n: Int, title: String, verdict: Verdict, last: Boolean, ena
 
 @Composable
 private fun SmallAction(label: String, primary: Boolean = false, onClick: () -> Unit) {
-    Text(label, style = MaterialTheme.typography.labelLarge, color = if (primary) Color.White else Palette.AccentSoft,
-        modifier = Modifier.clip(RoundedCornerShape(14.dp)).background(if (primary) Palette.Accent else Palette.Surface2)
+    Text(label, style = MaterialTheme.typography.labelLarge, color = if (primary) Palette.OnAccent else Palette.AccentSoft,
+        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (primary) Palette.Accent else Palette.Surface2)
             .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 11.dp))
 }
 

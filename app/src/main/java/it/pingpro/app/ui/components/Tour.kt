@@ -132,8 +132,8 @@ fun TourOverlay(tour: TourController, onFinished: () -> Unit = {}) {
 private fun TourBubble(tour: TourController, step: TourStep, onFinished: () -> Unit) {
     val last = tour.index == tour.steps.lastIndex
     Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(Palette.Surface2)
-            .border(1.dp, Palette.Accent.copy(alpha = 0.5f), RoundedCornerShape(24.dp)).padding(20.dp)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2)
+            .border(1.dp, Palette.Accent.copy(alpha = 0.5f), RoundedCornerShape(4.dp)).padding(20.dp)
     ) {
         Row {
             repeat(tour.steps.size) { i ->

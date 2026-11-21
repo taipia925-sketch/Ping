@@ -148,8 +148,8 @@ fun LabContent(
         item { BackHeader("Laboratorio", "Impara a leggere i risultati", onBack) }
         item {
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Violet.copy(alpha = 0.14f))
-                    .border(1.dp, Palette.Violet.copy(alpha = 0.4f), RoundedCornerShape(18.dp)).padding(14.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Violet.copy(alpha = 0.14f))
+                    .border(1.dp, Palette.Violet.copy(alpha = 0.4f), RoundedCornerShape(4.dp)).padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Outlined.School, null, tint = Palette.Violet)
@@ -164,8 +164,8 @@ fun LabContent(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(LabScenario.entries) { sc ->
                     val sel = sc == scenario
-                    Text(sc.label, style = MaterialTheme.typography.labelLarge, color = if (sel) Color.White else Palette.TextDim,
-                        modifier = Modifier.clip(CircleShape).background(if (sel) Palette.Accent else Palette.Surface)
+                    Text(sc.label, style = MaterialTheme.typography.labelLarge, color = if (sel) Palette.OnAccent else Palette.TextDim,
+                        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (sel) Palette.Accent else Palette.Surface)
                             .clickable { onScenario(sc) }.padding(horizontal = 16.dp, vertical = 10.dp))
                 }
             }
@@ -194,7 +194,7 @@ fun LabContent(
 @Composable
 private fun LabButton(icon: ImageVector, label: String, color: Color, modifier: Modifier, onClick: () -> Unit) {
     Column(
-        modifier.clip(RoundedCornerShape(18.dp)).background(color.copy(alpha = 0.12f)).clickable(onClick = onClick).padding(vertical = 12.dp),
+        modifier.clip(RoundedCornerShape(4.dp)).background(color.copy(alpha = 0.12f)).clickable(onClick = onClick).padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(icon, null, tint = color)

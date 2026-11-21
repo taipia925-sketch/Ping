@@ -183,7 +183,7 @@ fun PacketStrip(samples: List<PingSample>, modifier: Modifier = Modifier, slots:
                         val p = visible[idx]
                         if (p.status.isLost) Palette.Red else latencyColor(p.rttMs, highLatency)
                     }
-                    drawRoundRect(color, Offset(i * (cell + gap), 0f), Size(cell, size.height), CornerRadius(cell * 0.3f))
+                    drawRect(color, Offset(i * (cell + gap), 0f), Size(cell, size.height))
                 }
             }
         }

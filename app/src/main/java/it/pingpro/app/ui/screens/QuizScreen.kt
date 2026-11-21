@@ -147,8 +147,8 @@ fun QuizScreen(onBack: () -> Unit) {
         BackHeader("Mettiti alla prova", if (finished) null else "Domanda ${index + 1} di ${quizQuestions.size}", onBack)
         if (!finished) {
             val progress by animateFloatAsState((index + if (chosen != null) 1f else 0f) / quizQuestions.size, label = "pr")
-            Box(Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Palette.Surface3)) {
-                Box(Modifier.fillMaxWidth(progress).height(6.dp).clip(CircleShape).background(Palette.Accent))
+            Box(Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(6.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface3)) {
+                Box(Modifier.fillMaxWidth(progress).height(6.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent))
             }
         }
         AnimatedContent(if (finished) -1 else index, label = "q", modifier = Modifier.weight(1f)) { i ->
@@ -171,7 +171,7 @@ fun QuizScreen(onBack: () -> Unit) {
                         Column {
                             val right = chosen == q.correct
                             Column(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp))
                                     .background((if (right) Palette.Green else Palette.Amber).copy(alpha = 0.12f)).padding(16.dp)
                             ) {
                                 Text(if (right) "Esatto!" else "Non proprio.", style = MaterialTheme.typography.titleMedium,
@@ -181,12 +181,12 @@ fun QuizScreen(onBack: () -> Unit) {
                             }
                             Spacer(Modifier.height(14.dp))
                             Box(
-                                Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Accent)
+                                Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent)
                                     .clickable {
                                         if (index == quizQuestions.lastIndex) finished = true else { index++; chosen = null }
                                     },
                                 contentAlignment = Alignment.Center,
-                            ) { Text(if (index == quizQuestions.lastIndex) "Vedi il risultato" else "Domanda successiva", color = Color.White, fontWeight = FontWeight.Bold) }
+                            ) { Text(if (index == quizQuestions.lastIndex) "Vedi il risultato" else "Domanda successiva", color = Palette.OnAccent, fontWeight = FontWeight.Bold) }
                         }
                     }
                 }
@@ -205,11 +205,11 @@ private fun OptionRow(text: String, k: Int, chosen: Int?, correct: Int, onClick:
     }
     val border by animateColorAsState(when (state) { 1 -> Palette.Green; 2 -> Palette.Red; else -> Palette.Outline }, label = "ob")
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Surface)
-            .border(1.5.dp, border, RoundedCornerShape(18.dp)).clickable(enabled = chosen == null, onClick = onClick).padding(16.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface)
+            .border(1.5.dp, border, RoundedCornerShape(4.dp)).clickable(enabled = chosen == null, onClick = onClick).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(26.dp).clip(CircleShape).background(Palette.Surface3), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(26.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface3), contentAlignment = Alignment.Center) {
             when (state) {
                 1 -> Icon(Icons.Outlined.CheckCircle, null, tint = Palette.Green)
                 2 -> Icon(Icons.Outlined.Cancel, null, tint = Palette.Red)
@@ -225,13 +225,13 @@ private fun OptionRow(text: String, k: Int, chosen: Int?, correct: Int, onClick:
 fun QuizVisualView(v: QuizVisual) {
     when (v) {
         is QuizVisual.Prompt -> Text(v.text, fontFamily = Mono, fontSize = 12.sp, lineHeight = 17.sp, color = Color(0xFFCCCCCC),
-            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF0C0C0C)).padding(14.dp))
-        is QuizVisual.Chart -> Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(14.dp)) {
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Color(0xFF0C0C0C)).padding(14.dp))
+        is QuizVisual.Chart -> Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(14.dp)) {
             Sparkline(v.values, Palette.Accent, height = 64.dp)
             Spacer(Modifier.height(8.dp))
             Text(v.caption, style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
         }
-        is QuizVisual.Facts -> Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).padding(horizontal = 16.dp, vertical = 8.dp)) {
+        is QuizVisual.Facts -> Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).padding(horizontal = 16.dp, vertical = 8.dp)) {
             v.rows.forEach { (k, value) ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                     Text(k, style = MaterialTheme.typography.bodyMedium, color = Palette.TextDim, modifier = Modifier.weight(1f))
@@ -246,8 +246,8 @@ fun QuizVisualView(v: QuizVisual) {
 private fun QuizResult(score: Int, onRestart: () -> Unit) {
     val total = quizQuestions.size
     Column(Modifier.fillMaxSize().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Box(Modifier.size(110.dp).clip(CircleShape).background(Brush.linearGradient(listOf(Color(0xFF3D8BFF), Color(0xFF4FE3C1)))), contentAlignment = Alignment.Center) {
-            Icon(Icons.Outlined.EmojiEvents, null, tint = Color.White, modifier = Modifier.size(54.dp))
+        Box(Modifier.size(110.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Accent), contentAlignment = Alignment.Center) {
+            Icon(Icons.Outlined.EmojiEvents, null, tint = Palette.OnAccent, modifier = Modifier.size(54.dp))
         }
         Spacer(Modifier.height(20.dp))
         Text("$score su $total", style = MaterialTheme.typography.displayMedium)
@@ -261,7 +261,7 @@ private fun QuizResult(score: Int, onRestart: () -> Unit) {
             style = MaterialTheme.typography.bodyLarge, color = Palette.TextDim, textAlign = TextAlign.Center,
         )
         Spacer(Modifier.height(24.dp))
-        Box(Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(18.dp)).background(Palette.Surface2).clickable(onClick = onRestart),
+        Box(Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface2).clickable(onClick = onRestart),
             contentAlignment = Alignment.Center) { Text("Riprova", style = MaterialTheme.typography.labelLarge) }
     }
 }

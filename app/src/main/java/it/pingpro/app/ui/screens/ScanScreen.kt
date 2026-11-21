@@ -137,10 +137,10 @@ fun ScanScreen(
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(from, { from = it.trim() }, label = { Text("Da") }, singleLine = true, modifier = Modifier.weight(1f),
-                        enabled = !state.running, shape = RoundedCornerShape(16.dp), colors = colors,
+                        enabled = !state.running, shape = RoundedCornerShape(4.dp), colors = colors,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                     OutlinedTextField(to, { to = it.trim() }, label = { Text("A") }, singleLine = true, modifier = Modifier.weight(1f),
-                        enabled = !state.running, shape = RoundedCornerShape(16.dp), colors = colors,
+                        enabled = !state.running, shape = RoundedCornerShape(4.dp), colors = colors,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 }
                 Spacer(Modifier.height(8.dp))
@@ -166,10 +166,10 @@ fun ScanScreen(
                     .clickable(enabled = enabled) { if (state.running) onStop() else { selected = emptySet(); onStart(from, to) } },
                 horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(if (state.running) Icons.Outlined.Stop else Icons.Outlined.Search, null, tint = if (enabled) Color.White else Palette.TextFaint)
+                Icon(if (state.running) Icons.Outlined.Stop else Icons.Outlined.Search, null, tint = if (enabled) Palette.OnAccent else Palette.TextFaint)
                 Spacer(Modifier.width(8.dp))
                 Text(if (state.running) "Interrompi ricerca" else if (finished) "Cerca di nuovo" else "Avvia ricerca",
-                    style = MaterialTheme.typography.labelLarge, color = if (enabled) Color.White else Palette.TextFaint)
+                    style = MaterialTheme.typography.labelLarge, color = if (enabled) Palette.OnAccent else Palette.TextFaint)
             }
             if (busy && !state.running) Text("C'è un test in corso: interrompilo per avviare la ricerca.", style = MaterialTheme.typography.bodySmall,
                 color = Palette.Amber, modifier = Modifier.padding(top = 6.dp, start = 8.dp))
@@ -184,8 +184,8 @@ fun ScanScreen(
                         color = Palette.TextDim, modifier = Modifier.padding(bottom = 8.dp))
                 }
                 Spacer(Modifier.height(10.dp))
-                Box(Modifier.fillMaxWidth().height(8.dp).clip(CircleShape).background(Palette.Surface3)) {
-                    Box(Modifier.fillMaxWidth(state.progress).height(8.dp).clip(CircleShape).background(if (state.running) Palette.Accent else Palette.Green))
+                Box(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).background(Palette.Surface3)) {
+                    Box(Modifier.fillMaxWidth(state.progress).height(8.dp).clip(RoundedCornerShape(4.dp)).background(if (state.running) Palette.Accent else Palette.Green))
                 }
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -209,11 +209,11 @@ fun ScanScreen(
                         .clickable(enabled = enabled) { onPingAll(chosen) },
                     horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.Outlined.NetworkPing, null, tint = if (enabled) Color.White else Palette.TextFaint)
+                    Icon(Icons.Outlined.NetworkPing, null, tint = if (enabled) Palette.OnAccent else Palette.TextFaint)
                     Spacer(Modifier.width(8.dp))
                     Text(
                         if (selected.isEmpty()) "Pinga tutti (${chosen.size})" else if (chosen.size == 1) "Pinga il selezionato" else "Pinga i ${chosen.size} selezionati",
-                        style = MaterialTheme.typography.labelLarge, color = if (enabled) Color.White else Palette.TextFaint,
+                        style = MaterialTheme.typography.labelLarge, color = if (enabled) Palette.OnAccent else Palette.TextFaint,
                     )
                 }
                 Text(
@@ -236,7 +236,7 @@ fun ScanScreen(
             itemsIndexed(state.found, key = { _, d -> d.address }) { i, d ->
                 val sel = d.address in selected
                 val shape = when {
-                    state.found.size == 1 -> RoundedCornerShape(22.dp)
+                    state.found.size == 1 -> RoundedCornerShape(4.dp)
                     i == 0 -> RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)
                     i == state.found.lastIndex -> RoundedCornerShape(bottomStart = 22.dp, bottomEnd = 22.dp)
                     else -> RoundedCornerShape(0.dp)
@@ -281,7 +281,7 @@ fun ScanScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
                         Box(Modifier.weight(1f).height(54.dp).clip(PillShape).background(Palette.Accent).clickable { onAddToMulti(chosen) },
                             contentAlignment = Alignment.Center) {
-                            Text("Aggiungi ${chosen.size} a Più schede", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                            Text("Aggiungi ${chosen.size} a Più schede", style = MaterialTheme.typography.labelLarge, color = Palette.OnAccent)
                         }
                         Box(Modifier.weight(0.7f).height(54.dp).clip(PillShape).background(Palette.AccentBg).clickable { onSave(chosen) },
                             contentAlignment = Alignment.Center) {

@@ -26,7 +26,7 @@ data class NetInterfaceInfo(
 
 object IpConfig {
 
-    private fun toInt(ip: String): Long? {
+    fun toInt(ip: String): Long? {
         val p = ip.split('.')
         if (p.size != 4) return null
         var v = 0L

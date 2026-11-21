@@ -3,7 +3,22 @@ package it.pingpro.app.ui
 import android.widget.Toast
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,14 +33,9 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.NetworkPing
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -152,39 +162,25 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
         containerColor = Palette.Bg,
         bottomBar = {
             if (tabs.any { it.route == currentRoute }) {
-                NavigationBar(modifier = Modifier.tourTarget("nav"), containerColor = Palette.NavBar, tonalElevation = androidx.compose.ui.unit.Dp(0f)) {
-                    tabs.forEach { t ->
-                        NavigationBarItem(
-                            selected = currentRoute == t.route,
-                            onClick = { goTab(t.route) },
-                            icon = {
-                                if (t.route == "test" && (session.running || multi.running) && currentRoute != "test") {
-                                    val bad = session.status == LinkStatus.DOWN || (multi.running && multi.downCount > 0)
-                                    BadgedBox(badge = { Badge(containerColor = if (bad) Palette.Red else Palette.Green) }) {
-                                        Icon(t.icon, t.label)
-                                    }
-                                } else Icon(t.icon, t.label)
-                            },
-                            label = { Text(t.label, style = MaterialTheme.typography.labelSmall,
-                                fontWeight = if (currentRoute == t.route) FontWeight.ExtraBold else FontWeight.SemiBold) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Palette.AccentSoft, selectedTextColor = Palette.Text,
-                                indicatorColor = Palette.AccentBg,
-                                unselectedIconColor = Palette.TextDim, unselectedTextColor = Palette.TextDim,
-                            ),
-                        )
-                    }
-                }
+                val alarm = session.status == LinkStatus.DOWN || (multi.running && multi.downCount > 0)
+                BottomTabs(
+                    tabs = tabs, current = currentRoute, onSelect = { goTab(it) },
+                    testDot = if ((session.running || multi.running) && currentRoute != "test") (if (alarm) Palette.Red else Palette.Green) else null,
+                    modifier = Modifier.tourTarget("nav"),
+                )
             }
         },
     ) { padding ->
         Box(Modifier.fillMaxSize().background(Palette.Bg).padding(bottom = padding.calculateBottomPadding())) {
             NavHost(nav, startDestination = "test",
-                enterTransition = { fadeIn() }, exitTransition = { fadeOut() }) {
+                // Cambio schermata immediato: niente dissolvenze che sovrappongono due pagine.
+                enterTransition = { fadeIn(tween(120, delayMillis = 60)) }, exitTransition = { fadeOut(tween(60)) },
+                popEnterTransition = { fadeIn(tween(120, delayMillis = 60)) }, popExitTransition = { fadeOut(tween(60)) }) {
                 composable("test") {
                     if (vm.multiMode) {
                         MultiScreen(
                             state = multi, targets = vm.multiTargets, listName = vm.multiName, groups = groups,
+                            lan = network.firstOrNull { it.isLan && it.ipv4 != null },
                             runMode = vm.multiRunMode, settings = settings, singleRunning = session.running,
                             onRunMode = { vm.multiRunMode = it },
                             onSwitchSingle = { vm.multiMode = false },
@@ -386,3 +382,35 @@ fun AppRoot(onFirstTestStarting: () -> Unit) {
     }
 }
 
+
+/** Barra in basso stile «scheda tecnica»: filetto nero sopra, scheda attiva con barra spessa. */
+@Composable
+private fun BottomTabs(tabs: List<Tab>, current: String?, onSelect: (String) -> Unit, testDot: androidx.compose.ui.graphics.Color?, modifier: Modifier = Modifier) {
+    androidx.compose.foundation.layout.Column(modifier.fillMaxWidth().background(Palette.NavBar)) {
+        Box(Modifier.fillMaxWidth().height(2.dp).background(Palette.OutlineStrong))
+        androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp)) {
+            tabs.forEachIndexed { i, t ->
+                val sel = current == t.route
+                if (i > 0) Box(Modifier.width(1.dp).fillMaxHeight().padding(vertical = 14.dp).background(Palette.Outline))
+                Box(
+                    Modifier.weight(1f).fillMaxHeight()
+                        .clickable(onClickLabel = t.label) { onSelect(t.route) }
+                        .semantics { selected = sel },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (sel) Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(horizontal = 10.dp).height(4.dp).background(Palette.OutlineStrong))
+                    androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box {
+                            Icon(t.icon, null, tint = if (sel) Palette.Text else Palette.TextDim, modifier = Modifier.size(22.dp))
+                            if (t.route == "test" && testDot != null)
+                                Box(Modifier.align(Alignment.TopEnd).offset(x = 4.dp, y = (-2).dp).size(9.dp).clip(CircleShape).background(testDot).border(1.5.dp, Palette.NavBar, CircleShape))
+                        }
+                        androidx.compose.foundation.layout.Spacer(Modifier.height(3.dp))
+                        Text(t.label, style = MaterialTheme.typography.labelSmall, fontWeight = if (sel) FontWeight.Bold else FontWeight.Medium,
+                            color = if (sel) Palette.Text else Palette.TextDim)
+                    }
+                }
+            }
+        }
+    }
+}
